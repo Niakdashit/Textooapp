@@ -65,6 +65,11 @@
     constructor(el){
       this.el=el; this.overlay=document.createElement("div"); this.overlay.className="textoo-overlay";
       this.badge=document.createElement("div"); this.badge.className="textoo-badge"; this.badge.textContent="0";
+      this.isEnabled=true;
+      this.badge.setAttribute("role","button"); this.badge.setAttribute("aria-pressed","true"); this.badge.tabIndex=0;
+      this.badge.title="Cliquer pour désactiver Textoo";
+      this.badge.addEventListener("click",(ev)=>{ ev.preventDefault(); ev.stopPropagation(); this.toggleEnabled(); });
+      this.badge.addEventListener("keydown",(ev)=>{ if(ev.key===" "||ev.key==="Enter"){ ev.preventDefault(); this.toggleEnabled(); } });
       document.documentElement.appendChild(this.overlay); document.documentElement.appendChild(this.badge);
       this.results=[]; this.ignoredOffsets=new Set(); this.indexer={text:"",segments:[]}; this.isProgrammatic=false;
       this.scanRID=0; this.lastQuickText=""; this.lastText="";
@@ -112,11 +117,33 @@
         }, {passive:true});
       }
     }
+    toggleEnabled(){ this.setEnabled(!this.isEnabled); }
+    setEnabled(state){
+      if(this.isEnabled===state) return;
+      this.isEnabled=state;
+      this.badge.setAttribute("aria-pressed", state?"true":"false");
+      this.badge.title = state ? "Cliquer pour désactiver Textoo" : "Textoo désactivé – cliquer pour réactiver";
+      if(!state) hidePopover();
+      this.render();
+      if(state){ this.quickScan(); this.fullScanDebounced(); }
+    }
     positionOverlay(){ const r=this.el.getBoundingClientRect(); const s=window.getComputedStyle(this.el);
       Object.assign(this.overlay.style,{left:(r.left+window.scrollX)+"px",top:(r.top+window.scrollY)+"px",width:r.width+"px",height:r.height+"px",padding:s.padding,font:s.font,lineHeight:s.lineHeight,letterSpacing:s.letterSpacing,whiteSpace:"pre-wrap",direction:s.direction});
-      Object.assign(this.badge.style,{left:(r.left+window.scrollX)+r.width-8+"px",top:(r.top+window.scrollY)-8+"px",display:"none"}); }
+      Object.assign(this.badge.style,{left:(r.left+window.scrollX)+r.width-8+"px",top:(r.top+window.scrollY)-8+"px"}); }
     syncOverlayScroll(){ this.overlay.scrollTop=this.el.scrollTop; this.overlay.scrollLeft=this.el.scrollLeft; }
-    setBadge(n){ this.badge.textContent=String(n); this.badge.style.display = n>0 ? "flex" : "none"; }
+    setBadge(n){
+      this.badge.textContent=String(n);
+      this.badge.classList.toggle("textoo-badge-disabled", !this.isEnabled);
+      if(this.isEnabled){
+        this.badge.style.display = n>0 ? "flex" : "none";
+        this.badge.setAttribute("aria-label", n===1?"1 faute détectée":`${n} fautes détectées`);
+      }
+      else {
+        this.badge.style.display="flex";
+        const suffix = n===1?"1 faute détectée":`${n} fautes détectées`;
+        this.badge.setAttribute("aria-label", n>0?`Textoo désactivé – ${suffix}`:"Textoo désactivé");
+      }
+    }
 
     getLinearized(){
       if (this.el.isContentEditable){
@@ -131,6 +158,7 @@
     getValue(){ return this.getLinearized(); }
 
     optimisticClearNearCaret(){
+      if(!this.isEnabled) return;
       const text = this.getLinearized();
       let pos = text.length;
       if (this.el.isContentEditable){
@@ -145,10 +173,10 @@
     normalize(matches){ if(!matches) return []; const arr=matches.map(m=>({offset:m.offset,length:m.length,message:m.message||m.shortMessage||"",replacements:(m.replacements||[]).slice(0,6),rule:m.rule||{id:"GENERIC",description:m.shortMessage||"Suggestion"},type:m.type||m.rule?.issueType||"grammar"})); arr.sort((a,b)=>a.offset-b.offset||b.length-a.length); return arr.filter(m=>!this.ignoredOffsets.has(m.offset)); }
     hasDiff(a,b){ if(a.length!==b.length) return true; for(let i=0;i<a.length;i++){ const x=a[i], y=b[i]; if(x.offset!==y.offset||x.length!==y.length||x.message!==y.message) return true; } return false; }
 
-    quickScan(){ const text=this.getLinearized(); if(text===this.lastQuickText) return; this.lastQuickText=text; let off={matches:[]}; try{ off=window.TextooOfflineChecker.check(text); }catch(e){ off={matches:[]}; } const matches=this.normalize(off.matches);
+    quickScan(){ if(!this.isEnabled) return; const text=this.getLinearized(); if(text===this.lastQuickText) return; this.lastQuickText=text; let off={matches:[]}; try{ off=window.TextooOfflineChecker.check(text); }catch(e){ off={matches:[]}; } const matches=this.normalize(off.matches);
       if(matches.length===0 && this.results.length>0){ /* keep current to avoid flicker */ } else if(this.hasDiff(this.results,matches)){ this.results=matches; this.render(); } }
 
-    async fullScan(){ const text=this.getLinearized(); if(!text||text.trim().length===0){ this.results=[]; this.render(); return; } if(text===this.lastText) return; this.lastText=text; const rid=++this.scanRID;
+    async fullScan(){ if(!this.isEnabled) return; const text=this.getLinearized(); if(!text||text.trim().length===0){ this.results=[]; this.render(); return; } if(text===this.lastText) return; this.lastText=text; const rid=++this.scanRID;
       // offline merge
       let off={matches:[]}; try{ off=window.TextooOfflineChecker.check(text); }catch(e){ off={matches:[]}; } const offlineMapped=this.normalize(off.matches);
       if(offlineMapped.length===0 && this.results.length>0){ /* keep */ } else { const merged=[...this.results]; offlineMapped.forEach(m=>{ if(!merged.some(u=>Math.max(u.offset,m.offset)<Math.min(u.offset+u.length,m.offset+m.length))) merged.push(m); }); merged.sort((a,b)=>a.offset-b.offset||b.length-a.length); if(this.hasDiff(this.results,merged)){ this.results=merged; this.render(); } }
@@ -194,6 +222,15 @@
 
     // --- Rendering ---
     render(){
+      if(!this.isEnabled){
+        if(this.el.isContentEditable){ this.overlay.replaceChildren(); }
+        else { this.overlay.innerHTML=""; }
+        this.overlay.style.display="none";
+        this.positionOverlay();
+        this.setBadge(this.results.length);
+        return;
+      }
+      this.overlay.style.display="block";
       const text=this.getLinearized();
       if(this.el.isContentEditable){ this.renderMarkersCE(text,this.results); }
       else{
