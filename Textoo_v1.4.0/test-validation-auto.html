@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test de validation automatique - Réponse rapide</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 1000px; margin: 0 auto; padding: 20px; line-height: 1.6; }
+        .test-case { border: 1px solid #ddd; padding: 20px; margin: 20px 0; border-radius: 8px; }
+        .success { background: #d4edda; border-color: #c3e6cb; }
+        .error { background: #f8d7da; border-color: #f5c6cb; }
+        .warning { background: #fff3cd; border-color: #ffeaa7; }
+        .message-content { background: #f8f9fa; padding: 15px; border-radius: 5px; margin: 10px 0; font-family: monospace; white-space: pre-wrap; }
+        .response-content { background: #e8f5e8; padding: 15px; border-radius: 5px; margin: 10px 0; font-family: monospace; white-space: pre-wrap; }
+        .test-results { background: #f8f9fa; border: 1px solid #e9ecef; padding: 15px; border-radius: 5px; font-family: monospace; white-space: pre-wrap; max-height: 400px; overflow-y: auto; }
+        button { background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin: 5px; }
+        button:hover { background: #0056b3; }
+        .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin: 20px 0; }
+        .stat-card { background: white; border: 1px solid #ddd; padding: 15px; border-radius: 8px; text-align: center; }
+        .stat-number { font-size: 2em; font-weight: bold; color: #007bff; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Test de validation automatique - Réponse rapide</h1>
+    
+    <div class="stats">
+        <div class="stat-card">
+            <div class="stat-number" id="totalTests">0</div>
+            <div>Tests total</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number" id="successTests" style="color: #28a745;">0</div>
+            <div>Succès</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number" id="errorTests" style="color: #dc3545;">0</div>
+            <div>Échecs</div>
+        </div>
+    </div>
+
+    <button onclick="runAllTests()">🚀 Lancer tous les tests</button>
+    <button onclick="clearResults()">🗑️ Effacer les résultats</button>
+    
+    <div id="results"></div>
+
+    <script>
+        // Cas de test principaux
+        const testCases = [
+            {
+                id: 'departure-documents',
+                name: 'Documents de départ avec accusé de réception',
+                message: `Bonjour JONATHAN,
+
+Veuillez trouver ci-joint les documents liés à votre départ de la société. Nous vous remercions de nous en accuser réception.
+
+Bien cordialement`,
+                expectedMode: 'departure_documents',
+                expectedResponse: 'confirme bien réception'
+            },
+            {
+                id: 'attestation-emploi',
+                name: 'Attestation d\'emploi',
+                message: `Bonjour,
+
+Veuillez trouver ci-joint votre attestation d'emploi.
+
+Bien cordialement`,
+                expectedMode: 'administrative_documents',
+                expectedResponse: 'documents administratifs'
+            }
+        ];
+
+        let testResults = { total: 0, success: 0, error: 0 };
+
+        function updateStats() {
+            document.getElementById('totalTests').textContent = testResults.total;
+            document.getElementById('successTests').textContent = testResults.success;
+            document.getElementById('errorTests').textContent = testResults.error;
+        }
+
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+            testResults = { total: 0, success: 0, error: 0 };
+            updateStats();
+        }
+
+        function simulateGenerateContextualResponse(message, responseMode) {
+            const lowerText = message.toLowerCase();
+            
+            switch(responseMode) {
+                case 'departure_documents':
+                    if (lowerText.includes('accuser réception') || lowerText.includes('accuser')) {
+                        return "Bonjour,\n\nJe vous remercie pour l'envoi des documents liés à mon départ de la société. Je vous confirme bien réception de ces documents.\n\nCordialement,\nNOM Prénom";
+                } else {
+                        return "Bonjour,\n\nJe vous remercie pour l'envoi des documents liés à mon départ de la société. Je vais les examiner attentivement.\n\nCordialement,\nNOM Prénom";
+                    }
+                case 'administrative_documents':
+                    return "Bonjour,\n\nJe vous remercie pour l'envoi de ces documents administratifs. Je vais les examiner attentivement et vous faire part de mes observations si nécessaire.\n\nCordialement,\nNOM Prénom";
+                default:
+                    return "Merci pour votre message.";
+            }
+        }
+
+        function detectResponseMode(message) {
+            const lowerText = message.toLowerCase();
+            
+            if (lowerText.includes('départ') && lowerText.includes('société')) {
+                return 'departure_documents';
+            } else if (lowerText.includes('attestation') || lowerText.includes('certificat') || lowerText.includes('bulletin')) {
+                return 'administrative_documents';
+            }
+            
+            return 'reply';
+        }
+
+        function runTest(testCase) {
+            const results = { mode: null, response: null, success: false, errors: [] };
+
+            results.mode = detectResponseMode(testCase.message);
+            results.response = simulateGenerateContextualResponse(testCase.message, results.mode);
+
+            if (results.mode === testCase.expectedMode) {
+                results.success = true;
+            } else {
+                results.errors.push(`Mode incorrect: attendu "${testCase.expectedMode}", obtenu "${results.mode}"`);
+            }
+
+            const responseLower = results.response.toLowerCase();
+            if (testCase.expectedResponse && !responseLower.includes(testCase.expectedResponse.toLowerCase())) {
+                results.errors.push(`Contenu attendu "${testCase.expectedResponse}" non trouvé`);
+                results.success = false;
+            }
+
+            return results;
+        }
+
+        function runAllTests() {
+            clearResults();
+            const resultsDiv = document.getElementById('results');
+            
+            for (const testCase of testCases) {
+                testResults.total++;
+                const testResult = runTest(testCase);
+                
+                let testClass = 'test-case';
+                if (testResult.success) {
+                    testClass += ' success';
+                    testResults.success++;
+                } else {
+                    testClass += ' error';
+                    testResults.error++;
+                }
+
+                const testDiv = document.createElement('div');
+                testDiv.className = testClass;
+                testDiv.innerHTML = `
+                    <h3>${testCase.name}</h3>
+                    <p><strong>Mode détecté:</strong> ${testResult.mode}</p>
+                    <p><strong>Mode attendu:</strong> ${testCase.expectedMode}</p>
+                    
+                    <h4>Message original:</h4>
+                    <div class="message-content">${testCase.message}</div>
+                    
+                    <h4>Réponse générée:</h4>
+                    <div class="response-content">${testResult.response}</div>
+                    
+                    <h4>Résultats:</h4>
+                    <div class="test-results">${testResult.success ? '✅ SUCCÈS' : '❌ ÉCHEC'}
+${testResult.errors.length > 0 ? '\nErreurs:\n' + testResult.errors.map(e => '- ' + e).join('\n') : ''}</div>
+                `;
+                
+                resultsDiv.appendChild(testDiv);
+            }
+            
+            updateStats();
+        }
+
+        window.addEventListener('load', function() {
+            console.log('Page de test chargée - ' + testCases.length + ' cas de test prêts');
+        });
+    </script>
+</body>
+</html>

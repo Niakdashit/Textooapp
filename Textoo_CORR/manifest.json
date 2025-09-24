@@ -1,0 +1,42 @@
+{
+  "manifest_version": 3,
+  "name": "Textoo – Correcteur Français (Ultra‑rapide)",
+  "version": "1.4.0",
+  "description": "Correcteur FR temps réel. Rendu par rectangles (anti‑décalage après sauts de ligne) et corrections sans flicker.",
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "permissions": [
+    "storage"
+  ],
+  "host_permissions": [
+    "https://api.languagetool.org/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "http://*/*",
+        "https://*/*"
+      ],
+      "exclude_matches": [
+        "*://*.google.com/docs/*"
+      ],
+      "js": [
+        "morphology.js",
+        "offline_rules.js",
+        "content.js"
+      ],
+      "css": [
+        "style.css"
+      ],
+      "all_frames": true,
+      "run_at": "document_idle"
+    }
+  ],
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  }
+}

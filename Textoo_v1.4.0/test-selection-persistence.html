@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Persistance Sélection - Textoo Assist</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .test-area {
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            min-height: 200px;
+        }
+        .instructions {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        .test-text {
+            line-height: 1.6;
+            font-size: 16px;
+        }
+        .highlight {
+            background: yellow;
+            color: black;
+        }
+        .status {
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.2);
+        }
+        .success {
+            background: rgba(76, 175, 80, 0.3);
+        }
+        .error {
+            background: rgba(244, 67, 54, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Test Persistance Sélection - Textoo Assist</h1>
+        
+        <div class="instructions">
+            <h3>📋 Instructions de test :</h3>
+            <ol>
+                <li>Sélectionnez du texte dans la zone de test ci-dessous</li>
+                <li>Cliquez sur le bouton Textoo Assist (FAB) en bas à droite</li>
+                <li>Vérifiez que la sélection reste active même après le clic</li>
+                <li>Testez les différentes actions du menu</li>
+                <li>Vérifiez que la sélection est préservée</li>
+            </ol>
+        </div>
+
+        <div class="test-area" contenteditable="true">
+            <div class="test-text">
+                <p><strong>Texte de test pour la persistance de sélection :</strong></p>
+                
+                <p>Sélectionnez ce paragraphe et testez la persistance de la sélection avec le bouton Textoo Assist. Le texte sélectionné devrait rester visible même après avoir cliqué sur le bouton.</p>
+                
+                <p>Voici un autre paragraphe que vous pouvez sélectionner pour tester différentes longueurs de sélection. Essayez de sélectionner une partie de ce texte ou la totalité.</p>
+                
+                <p>Ce troisième paragraphe contient des phrases plus courtes. Vous pouvez tester la sélection de mots individuels ou de phrases complètes.</p>
+                
+                <p><em>Texte en italique</em> et <strong>texte en gras</strong> pour tester la persistance sur différents styles de texte.</p>
+                
+                <p>Dernier paragraphe avec des éléments spéciaux comme des <span class="highlight">éléments surlignés</span> et des <a href="#">liens</a> pour tester la robustesse de la persistance de sélection.</p>
+            </div>
+        </div>
+
+        <div class="status" id="status">
+            <strong>Status :</strong> En attente de sélection de texte...
+        </div>
+
+        <div class="instructions">
+            <h3>🔧 Fonctionnalités testées :</h3>
+            <ul>
+                <li>✅ Capture de sélection au mousedown</li>
+                <li>✅ Prévention de la perte de focus</li>
+                <li>✅ Restauration immédiate de la sélection</li>
+                <li>✅ Restauration après délai de sécurité</li>
+                <li>✅ Validation de la range de sélection</li>
+                <li>✅ Gestion des clics sur le menu</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // Simuler les fonctions de l'extension Textoo
+        let lastSelectedText = '';
+        let lastSelectionRange = null;
+        
+        function getSelectedText() {
+            try {
+                const sel = window.getSelection();
+                if(sel && sel.rangeCount > 0) {
+                    const range = sel.getRangeAt(0);
+                    const selectedText = range.toString().trim();
+                    
+                    if(selectedText.length > 0) {
+                        console.log('Texte sélectionné trouvé:', selectedText);
+                        lastSelectedText = selectedText;
+                        lastSelectionRange = range.cloneRange();
+                        
+                        // Vérifier que la range est valide
+                        try {
+                            lastSelectionRange.toString();
+                            console.log('Range de sélection sauvegardée et validée');
+                        } catch(e) {
+                            console.log('Range invalide, nettoyage:', e);
+                            lastSelectionRange = null;
+                        }
+                        
+                        updateStatus(`✅ Sélection capturée: "${selectedText}"`, 'success');
+                        return selectedText;
+                    }
+                }
+                
+                updateStatus('❌ Aucun texte sélectionné', 'error');
+                lastSelectedText = '';
+                lastSelectionRange = null;
+                return '';
+            } catch(e) {
+                console.error('Erreur lors de la récupération de la sélection:', e);
+                updateStatus('❌ Erreur lors de la capture de sélection', 'error');
+                lastSelectedText = '';
+                lastSelectionRange = null;
+                return '';
+            }
+        }
+        
+        function updateStatus(message, type = '') {
+            const statusEl = document.getElementById('status');
+            statusEl.innerHTML = `<strong>Status :</strong> ${message}`;
+            statusEl.className = `status ${type}`;
+        }
+        
+        // Capturer la sélection en temps réel
+        document.addEventListener('selectionchange', () => {
+            const selectedText = getSelectedText();
+            if(selectedText) {
+                console.log('Sélection détectée:', selectedText);
+            }
+        });
+        
+        // Simuler le bouton FAB
+        function createFAB() {
+            const fab = document.createElement('button');
+            fab.innerHTML = '📝';
+            fab.style.cssText = `
+                position: fixed;
+                right: 18px;
+                bottom: 18px;
+                width: 44px;
+                height: 44px;
+                border-radius: 50%;
+                border: none;
+                background: #6c3ef0;
+                color: white;
+                font-size: 20px;
+                cursor: pointer;
+                z-index: 1000;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            `;
+            fab.title = 'Textoo Assist - Test Persistance';
+            
+            // Capturer au mousedown
+            fab.addEventListener('mousedown', (e) => {
+                const selectedText = getSelectedText();
+                console.log('Texte capturé au mousedown:', selectedText);
+                e.preventDefault();
+            });
+            
+            // Gestion du clic
+            fab.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                console.log('Clic sur FAB détecté');
+                
+                // Restaurer la sélection
+                if(lastSelectionRange) {
+                    try {
+                        const sel = window.getSelection();
+                        sel.removeAllRanges();
+                        sel.addRange(lastSelectionRange);
+                        console.log('Sélection restaurée après clic');
+                        updateStatus(`✅ Sélection restaurée: "${lastSelectedText}"`, 'success');
+                    } catch(e) {
+                        console.log('Impossible de restaurer la sélection:', e);
+                        updateStatus('❌ Impossible de restaurer la sélection', 'error');
+                    }
+                    
+                    // Restaurer aussi après délai
+                    setTimeout(() => {
+                        try {
+                            const sel = window.getSelection();
+                            sel.removeAllRanges();
+                            sel.addRange(lastSelectionRange);
+                            console.log('Sélection restaurée après délai');
+                            updateStatus(`✅ Sélection maintenue: "${lastSelectedText}"`, 'success');
+                        } catch(e) {
+                            console.log('Impossible de restaurer la sélection après délai:', e);
+                            updateStatus('❌ Sélection perdue après délai', 'error');
+                        }
+                    }, 100);
+                } else {
+                    updateStatus('❌ Aucune sélection à restaurer', 'error');
+                }
+            });
+            
+            document.body.appendChild(fab);
+        }
+        
+        // Initialiser le test
+        document.addEventListener('DOMContentLoaded', () => {
+            createFAB();
+            updateStatus('🧪 Test prêt - Sélectionnez du texte et cliquez sur le bouton', '');
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Intégration Outlook - Textoo</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #0078d4;
+            border-bottom: 2px solid #0078d4;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #323130;
+            margin-top: 30px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #e1dfdd;
+            border-radius: 4px;
+        }
+        .success {
+            background: #dff6dd;
+            border-color: #107c10;
+            color: #107c10;
+        }
+        .error {
+            background: #fde7e9;
+            border-color: #d13438;
+            color: #d13438;
+        }
+        .info {
+            background: #deecf9;
+            border-color: #0078d4;
+            color: #0078d4;
+        }
+        .composer-mock {
+            border: 2px solid #0078d4;
+            border-radius: 4px;
+            padding: 15px;
+            min-height: 100px;
+            background: white;
+            margin: 10px 0;
+        }
+        .composer-mock[contenteditable="true"] {
+            outline: none;
+        }
+        .composer-mock:focus {
+            border-color: #106ebe;
+            box-shadow: 0 0 0 1px #106ebe;
+        }
+        .message-mock {
+            background: #f3f2f1;
+            border-left: 4px solid #0078d4;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 0 4px 4px 0;
+        }
+        button {
+            background: #0078d4;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #106ebe;
+        }
+        .log {
+            background: #323130;
+            color: #ffffff;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+            margin: 10px 0;
+        }
+        .status {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+        .status.ok {
+            background: #107c10;
+            color: white;
+        }
+        .status.fail {
+            background: #d13438;
+            color: white;
+        }
+        .status.pending {
+            background: #ffaa44;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Test d'Intégration Outlook - Textoo v1.4.0</h1>
+        <p>Cette page simule l'environnement Outlook Live Mail pour tester l'extension Textoo.</p>
+        
+        <div class="test-section info">
+            <h3>📋 Instructions</h3>
+            <ol>
+                <li>Assurez-vous que l'extension Textoo est installée et activée</li>
+                <li>Ouvrez cette page avec l'URL contenant "outlook.live.com" ou "outlook.office.com"</li>
+                <li>Testez chaque fonctionnalité ci-dessous</li>
+                <li>Vérifiez que le FAB (bouton flottant) apparaît en bas à droite</li>
+            </ol>
+        </div>
+    </div>
+
+    <div class="container">
+        <h2>🎯 Test 1: Détection de Plateforme</h2>
+        <div class="test-section" id="platform-test">
+            <p><strong>URL actuelle:</strong> <span id="current-url"></span></p>
+            <p><strong>Détection Outlook:</strong> <span id="outlook-detection" class="status pending">En cours...</span></p>
+            <p><strong>Extension chargée:</strong> <span id="extension-loaded" class="status pending">En cours...</span></p>
+        </div>
+    </div>
+
+    <div class="container">
+        <h2>📝 Test 2: Composer Box (Zone de Rédaction)</h2>
+        <div class="test-section">
+            <p>Testez la détection et l'insertion de texte dans la zone de composition :</p>
+            
+            <!-- Simuler différents types de composer Outlook -->
+            <div class="composer-mock" contenteditable="true" aria-label="Message body" role="textbox" data-testid="rooster-editor">
+                Cliquez ici pour taper votre message... (Composer principal Outlook)
+            </div>
+            
+            <div class="composer-mock" contenteditable="true" role="textbox" aria-label="Compose message">
+                Zone de composition alternative... (Composer alternatif)
+            </div>
+            
+            <textarea class="composer-mock" aria-label="Message content" placeholder="Zone textarea pour Outlook mobile..."></textarea>
+            
+            <button onclick="testComposerDetection()">🔍 Tester Détection Composer</button>
+            <button onclick="testTextInsertion()">✏️ Tester Insertion Texte</button>
+            
+            <div class="log" id="composer-log"></div>
+        </div>
+    </div>
+
+    <div class="container">
+        <h2>📧 Test 3: Récupération de Message</h2>
+        <div class="test-section">
+            <p>Testez la récupération du contenu des messages reçus :</p>
+            
+            <!-- Simuler des messages Outlook -->
+            <div class="message-mock" role="listitem">
+                <strong>De:</strong> amélie.martin@formation.com<br>
+                <strong>Objet:</strong> Planning de formation - Octobre 2024<br><br>
+                Bonjour,<br><br>
+                Je vous confirme que la session de formation initialement prévue le 3 octobre a été déplacée au 5 octobre à 10h. 
+                Merci de confirmer votre présence pour cette nouvelle date.<br><br>
+                Le planning ajusté est en pièce jointe.<br><br>
+                Cordialement,<br>
+                Amélie Martin
+            </div>
+            
+            <div class="message-mock" role="listitem">
+                <strong>De:</strong> support@entreprise.com<br>
+                <strong>Objet:</strong> Réunion équipe - Calendrier<br><br>
+                Bonjour,<br><br>
+                La réunion d'équipe de demain est confirmée à 14h en salle de conférence. 
+                Merci de préparer vos rapports d'activité.<br><br>
+                Merci,<br>
+                L'équipe Support
+            </div>
+            
+            <button onclick="testMessageRetrieval()">📨 Tester Récupération Message</button>
+            <button onclick="testQuickReply()">⚡ Tester Réponse Rapide</button>
+            
+            <div class="log" id="message-log"></div>
+        </div>
+    </div>
+
+    <div class="container">
+        <h2>✨ Test 4: Reformulation de Texte</h2>
+        <div class="test-section">
+            <p>Testez la reformulation de texte sélectionné :</p>
+            
+            <div class="composer-mock" contenteditable="true" id="reformulation-test">
+                Sélectionnez ce texte pour le reformuler: "Je veux savoir si vous pouvez me dire quand est-ce que la réunion va avoir lieu parce que j'ai besoin de m'organiser."
+            </div>
+            
+            <button onclick="testTextSelection()">🎯 Tester Sélection Texte</button>
+            <button onclick="testReformulation()">🔄 Tester Reformulation</button>
+            
+            <div class="log" id="reformulation-log"></div>
+        </div>
+    </div>
+
+    <div class="container">
+        <h2>🎨 Test 5: Interface Utilisateur</h2>
+        <div class="test-section">
+            <p>Vérifiez que l'interface Textoo s'affiche correctement :</p>
+            
+            <button onclick="testFABVisibility()">👁️ Vérifier FAB</button>
+            <button onclick="testMenuFunctionality()">📋 Tester Menu</button>
+            <button onclick="testPanelDisplay()">🪟 Tester Panneau</button>
+            
+            <div class="log" id="ui-log"></div>
+        </div>
+    </div>
+
+    <div class="container">
+        <h2>📊 Résultats des Tests</h2>
+        <div class="test-section" id="results-summary">
+            <p>Résumé des tests sera affiché ici...</p>
+        </div>
+    </div>
+
+    <script>
+        // Simuler l'environnement Outlook
+        const isOutlookEnv = window.location.hostname.includes('outlook.live.com') || 
+                            window.location.hostname.includes('outlook.office.com') ||
+                            window.location.search.includes('outlook=true');
+
+        // Logs
+        function log(containerId, message, type = 'info') {
+            const container = document.getElementById(containerId);
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = `[${timestamp}] ${message}\n`;
+            container.textContent += logEntry;
+            container.scrollTop = container.scrollHeight;
+            
+            console.log(`[Textoo Test] ${message}`);
+        }
+
+        // Test 1: Détection de plateforme
+        function initPlatformTest() {
+            document.getElementById('current-url').textContent = window.location.href;
+            
+            const isOutlook = /outlook\.(live|office)\.com$/.test(window.location.hostname);
+            const outlookStatus = document.getElementById('outlook-detection');
+            
+            if (isOutlook || isOutlookEnv) {
+                outlookStatus.textContent = 'DÉTECTÉ';
+                outlookStatus.className = 'status ok';
+            } else {
+                outlookStatus.textContent = 'NON DÉTECTÉ';
+                outlookStatus.className = 'status fail';
+            }
+            
+            // Vérifier si l'extension est chargée
+            setTimeout(() => {
+                const extensionStatus = document.getElementById('extension-loaded');
+                const fab = document.getElementById('hmw-fab');
+                const textooOverlays = document.querySelectorAll('.textoo-overlay');
+                
+                if (fab || textooOverlays.length > 0 || window.TextooOfflineChecker) {
+                    extensionStatus.textContent = 'CHARGÉE';
+                    extensionStatus.className = 'status ok';
+                } else {
+                    extensionStatus.textContent = 'NON CHARGÉE';
+                    extensionStatus.className = 'status fail';
+                }
+            }, 2000);
+        }
+
+        // Test 2: Composer detection
+        function testComposerDetection() {
+            log('composer-log', 'Test de détection du composer...', 'info');
+            
+            // Simuler la fonction findComposerBox
+            const selectors = [
+                'div[aria-label="Message body"]',
+                'div[role="textbox"][aria-label*="message"]',
+                'div[contenteditable="true"][role="textbox"]',
+                'div[data-testid="rooster-editor"]',
+                'div[contenteditable="true"]',
+                'textarea[aria-label*="message"]'
+            ];
+            
+            let found = false;
+            selectors.forEach(selector => {
+                const elements = document.querySelectorAll(selector);
+                if (elements.length > 0) {
+                    log('composer-log', `✅ Trouvé ${elements.length} élément(s) avec: ${selector}`, 'success');
+                    found = true;
+                } else {
+                    log('composer-log', `❌ Aucun élément trouvé avec: ${selector}`, 'error');
+                }
+            });
+            
+            if (found) {
+                log('composer-log', '🎉 Détection du composer: SUCCÈS', 'success');
+            } else {
+                log('composer-log', '💥 Détection du composer: ÉCHEC', 'error');
+            }
+        }
+
+        function testTextInsertion() {
+            log('composer-log', 'Test d\'insertion de texte...', 'info');
+            
+            const testText = 'Texte inséré par Textoo - Test réussi!';
+            const composers = document.querySelectorAll('.composer-mock[contenteditable="true"]');
+            
+            if (composers.length > 0) {
+                const composer = composers[0];
+                composer.focus();
+                
+                try {
+                    // Méthode 1: execCommand
+                    if (document.execCommand('insertText', false, testText)) {
+                        log('composer-log', '✅ Insertion via execCommand: SUCCÈS', 'success');
+                        return;
+                    }
+                } catch (e) {
+                    log('composer-log', `❌ Insertion via execCommand: ${e.message}`, 'error');
+                }
+                
+                try {
+                    // Méthode 2: DOM manipulation
+                    const selection = window.getSelection();
+                    const range = selection.getRangeAt(0) || document.createRange();
+                    range.deleteContents();
+                    const textNode = document.createTextNode(testText);
+                    range.insertNode(textNode);
+                    log('composer-log', '✅ Insertion via DOM: SUCCÈS', 'success');
+                } catch (e) {
+                    log('composer-log', `❌ Insertion via DOM: ${e.message}`, 'error');
+                }
+            } else {
+                log('composer-log', '❌ Aucun composer trouvé pour l\'insertion', 'error');
+            }
+        }
+
+        // Test 3: Message retrieval
+        function testMessageRetrieval() {
+            log('message-log', 'Test de récupération de message...', 'info');
+            
+            // Simuler la logique de getLastMessageText pour Outlook
+            const messageElements = document.querySelectorAll('.message-mock, [role="listitem"]');
+            
+            let bestCandidate = '';
+            let bestScore = 0;
+            
+            messageElements.forEach((element, index) => {
+                const txt = element.innerText || element.textContent || '';
+                
+                if (txt && txt.trim().length > 30) {
+                    const lowerTxt = txt.toLowerCase();
+                    let score = 0;
+                    
+                    // Scoring logic
+                    if (lowerTxt.includes('bonjour')) score += 2;
+                    if (lowerTxt.includes('formation')) score += 3;
+                    if (lowerTxt.includes('planning')) score += 3;
+                    if (lowerTxt.includes('confirmer')) score += 2;
+                    if (lowerTxt.includes('cordialement')) score += 1;
+                    
+                    log('message-log', `Message ${index + 1} - Score: ${score}`, 'info');
+                    
+                    if (score > bestScore) {
+                        bestScore = score;
+                        bestCandidate = txt.trim();
+                    }
+                }
+            });
+            
+            if (bestCandidate && bestScore > 0) {
+                log('message-log', `✅ Meilleur message trouvé (score: ${bestScore})`, 'success');
+                log('message-log', `Contenu: "${bestCandidate.substring(0, 100)}..."`, 'info');
+            } else {
+                log('message-log', '❌ Aucun message approprié trouvé', 'error');
+            }
+        }
+
+        function testQuickReply() {
+            log('message-log', 'Test de réponse rapide...', 'info');
+            
+            // Simuler une réponse rapide basée sur le message de formation
+            const formationMessage = document.querySelector('.message-mock').innerText;
+            
+            if (formationMessage.toLowerCase().includes('formation') && 
+                formationMessage.toLowerCase().includes('confirmer')) {
+                
+                const quickReply = "Bonjour,\n\nMerci pour cette information concernant le planning de formation. Je confirme ma présence à la session du 5 octobre à 10h.\n\nCordialement,\nNOM Prénom";
+                
+                log('message-log', '✅ Réponse rapide générée:', 'success');
+                log('message-log', quickReply, 'info');
+                
+                // Essayer d'insérer dans le premier composer
+                const composer = document.querySelector('.composer-mock[contenteditable="true"]');
+                if (composer) {
+                    composer.focus();
+                    composer.innerHTML = quickReply.replace(/\n/g, '<br>');
+                    log('message-log', '✅ Réponse insérée dans le composer', 'success');
+                }
+            } else {
+                log('message-log', '❌ Impossible de générer une réponse appropriée', 'error');
+            }
+        }
+
+        // Test 4: Text selection and reformulation
+        function testTextSelection() {
+            log('reformulation-log', 'Test de sélection de texte...', 'info');
+            
+            const testElement = document.getElementById('reformulation-test');
+            
+            // Sélectionner automatiquement le texte
+            const range = document.createRange();
+            range.selectNodeContents(testElement);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            
+            const selectedText = selection.toString();
+            if (selectedText.length > 0) {
+                log('reformulation-log', `✅ Texte sélectionné: "${selectedText.substring(0, 50)}..."`, 'success');
+            } else {
+                log('reformulation-log', '❌ Aucun texte sélectionné', 'error');
+            }
+        }
+
+        function testReformulation() {
+            log('reformulation-log', 'Test de reformulation...', 'info');
+            
+            const originalText = "Je veux savoir si vous pouvez me dire quand est-ce que la réunion va avoir lieu parce que j'ai besoin de m'organiser.";
+            const reformulatedText = "Pourriez-vous m'indiquer la date et l'heure de la réunion, s'il vous plaît ? Cela m'aiderait à organiser mon planning.";
+            
+            log('reformulation-log', `Texte original: "${originalText}"`, 'info');
+            log('reformulation-log', `✅ Texte reformulé: "${reformulatedText}"`, 'success');
+            
+            // Remplacer dans l'élément de test
+            const testElement = document.getElementById('reformulation-test');
+            testElement.innerHTML = testElement.innerHTML.replace(originalText, `<mark style="background: #90EE90;">${reformulatedText}</mark>`);
+        }
+
+        // Test 5: UI elements
+        function testFABVisibility() {
+            log('ui-log', 'Test de visibilité du FAB...', 'info');
+            
+            const fab = document.getElementById('hmw-fab');
+            if (fab) {
+                const styles = window.getComputedStyle(fab);
+                if (styles.display !== 'none' && styles.visibility !== 'hidden') {
+                    log('ui-log', '✅ FAB visible et correctement positionné', 'success');
+                } else {
+                    log('ui-log', '❌ FAB présent mais masqué', 'error');
+                }
+            } else {
+                log('ui-log', '❌ FAB non trouvé dans le DOM', 'error');
+            }
+        }
+
+        function testMenuFunctionality() {
+            log('ui-log', 'Test de fonctionnalité du menu...', 'info');
+            
+            const menu = document.getElementById('hmw-menu');
+            if (menu) {
+                log('ui-log', '✅ Menu trouvé dans le DOM', 'success');
+                
+                const buttons = menu.querySelectorAll('button');
+                log('ui-log', `Menu contient ${buttons.length} boutons`, 'info');
+                
+                buttons.forEach((btn, index) => {
+                    const action = btn.dataset.act || btn.textContent;
+                    log('ui-log', `Bouton ${index + 1}: ${action}`, 'info');
+                });
+            } else {
+                log('ui-log', '❌ Menu non trouvé', 'error');
+            }
+        }
+
+        function testPanelDisplay() {
+            log('ui-log', 'Test d\'affichage du panneau...', 'info');
+            
+            const panel = document.getElementById('hmw-box');
+            if (panel) {
+                log('ui-log', '✅ Panneau trouvé dans le DOM', 'success');
+                
+                // Simuler l'ouverture du panneau
+                panel.style.display = 'block';
+                log('ui-log', '✅ Panneau affiché', 'success');
+                
+                setTimeout(() => {
+                    panel.style.display = 'none';
+                    log('ui-log', '✅ Panneau masqué', 'success');
+                }, 2000);
+            } else {
+                log('ui-log', '❌ Panneau non trouvé', 'error');
+            }
+        }
+
+        // Initialisation
+        document.addEventListener('DOMContentLoaded', function() {
+            initPlatformTest();
+            
+            // Simuler l'URL Outlook si nécessaire
+            if (!isOutlookEnv && window.location.search.includes('simulate=outlook')) {
+                log('platform-test', '🔧 Mode simulation Outlook activé', 'info');
+            }
+        });
+
+        // Auto-test après 3 secondes
+        setTimeout(() => {
+            if (document.getElementById('extension-loaded').className.includes('ok')) {
+                log('results-summary', '🎉 Extension détectée - Lancement des tests automatiques...', 'success');
+                
+                setTimeout(() => testComposerDetection(), 1000);
+                setTimeout(() => testMessageRetrieval(), 2000);
+                setTimeout(() => testFABVisibility(), 3000);
+            }
+        }, 3000);
+    </script>
+</body>
+</html>

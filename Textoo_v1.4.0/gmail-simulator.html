@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gmail - Simulateur pour Tests Playwright</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+        }
+        .header {
+            background-color: #ea4335;
+            color: white;
+            padding: 10px 20px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+        }
+        .search-bar {
+            flex: 1;
+            padding: 8px 12px;
+            border: none;
+            border-radius: 20px;
+            font-size: 16px;
+        }
+        .main-container {
+            display: flex;
+            height: calc(100vh - 60px);
+        }
+        .sidebar {
+            width: 200px;
+            background-color: white;
+            border-right: 1px solid #ddd;
+            padding: 20px 0;
+        }
+        .sidebar-item {
+            padding: 10px 20px;
+            cursor: pointer;
+            border-bottom: 1px solid #eee;
+            transition: background-color 0.2s;
+        }
+        .sidebar-item:hover {
+            background-color: #f0f0f0;
+        }
+        .sidebar-item.active {
+            background-color: #e8f0fe;
+            color: #1a73e8;
+            font-weight: bold;
+        }
+        .content {
+            flex: 1;
+            background-color: white;
+            padding: 20px;
+        }
+        .email-list {
+            margin-bottom: 20px;
+        }
+        .email-item {
+            padding: 15px;
+            border: 1px solid #eee;
+            margin-bottom: 10px;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: all 0.2s;
+        }
+        .email-item:hover {
+            background-color: #f8f9fa;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .email-item.unread {
+            background-color: #f0f8ff;
+            border-left: 4px solid #1a73e8;
+        }
+        .email-subject {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .email-sender {
+            color: #666;
+            font-size: 14px;
+        }
+        .email-preview {
+            color: #888;
+            font-size: 13px;
+            margin-top: 5px;
+        }
+        .compose-btn {
+            background-color: #1a73e8;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-bottom: 20px;
+            transition: background-color 0.2s;
+        }
+        .compose-btn:hover {
+            background-color: #1557b0;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 1000;
+        }
+        .modal-content {
+            background-color: white;
+            margin: 50px auto;
+            padding: 30px;
+            width: 80%;
+            max-width: 600px;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .form-group input, .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        .form-group textarea {
+            height: 200px;
+            resize: vertical;
+        }
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .btn-primary {
+            background-color: #1a73e8;
+            color: white;
+        }
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+        }
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: #28a745;
+            color: white;
+            padding: 15px 20px;
+            border-radius: 5px;
+            display: none;
+            z-index: 1001;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo">📧 Gmail Simulateur</div>
+        <input type="text" class="search-bar" placeholder="Rechercher dans les emails..." id="searchInput">
+        <button class="compose-btn" onclick="openCompose()">✏️ Nouveau message</button>
+    </div>
+
+    <div class="main-container">
+        <div class="sidebar">
+            <div class="sidebar-item active" onclick="selectFolder('inbox')">📥 Boîte de réception</div>
+            <div class="sidebar-item" onclick="selectFolder('sent')">📤 Envoyés</div>
+            <div class="sidebar-item" onclick="selectFolder('drafts')">📝 Brouillons</div>
+            <div class="sidebar-item" onclick="selectFolder('spam')">🗑️ Spam</div>
+            <div class="sidebar-item" onclick="selectFolder('trash')">🗑️ Corbeille</div>
+        </div>
+
+        <div class="content">
+            <h2 id="folderTitle">📥 Boîte de réception</h2>
+            
+            <div class="email-list" id="emailList">
+                <div class="email-item unread" onclick="openEmail(1)">
+                    <div class="email-subject">🎉 Invitation à la réunion d'équipe</div>
+                    <div class="email-sender">De: Sarah Martin <sarah.martin@company.com></div>
+                    <div class="email-preview">Bonjour, je vous invite à notre réunion hebdomadaire demain à 14h...</div>
+                </div>
+                
+                <div class="email-item unread" onclick="openEmail(2)">
+                    <div class="email-subject">📊 Rapport mensuel disponible</div>
+                    <div class="email-sender">De: Système RH <hr@company.com></div>
+                    <div class="email-preview">Votre rapport mensuel de performance est maintenant disponible...</div>
+                </div>
+                
+                <div class="email-item" onclick="openEmail(3)">
+                    <div class="email-subject">🛒 Confirmation de commande</div>
+                    <div class="email-sender">De: Amazon <noreply@amazon.fr></div>
+                    <div class="email-preview">Merci pour votre commande. Elle sera livrée sous 2-3 jours...</div>
+                </div>
+                
+                <div class="email-item unread" onclick="openEmail(4)">
+                    <div class="email-subject">🎂 Joyeux anniversaire !</div>
+                    <div class="email-sender">De: LinkedIn <news@linkedin.com></div>
+                    <div class="email-preview">Souhaitez un joyeux anniversaire à vos contacts LinkedIn...</div>
+                </div>
+                
+                <div class="email-item" onclick="openEmail(5)">
+                    <div class="email-subject">💡 Newsletter Tech - Janvier 2024</div>
+                    <div class="email-sender">De: TechNews <newsletter@technews.fr></div>
+                    <div class="email-preview">Découvrez les dernières tendances technologiques de ce mois...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de composition -->
+    <div class="modal" id="composeModal">
+        <div class="modal-content">
+            <h3>✏️ Nouveau message</h3>
+            <form id="composeForm">
+                <div class="form-group">
+                    <label>À:</label>
+                    <input type="email" id="toInput" placeholder="destinataire@example.com">
+                </div>
+                <div class="form-group">
+                    <label>Objet:</label>
+                    <input type="text" id="subjectInput" placeholder="Objet du message">
+                </div>
+                <div class="form-group">
+                    <label>Message:</label>
+                    <textarea id="messageInput" placeholder="Tapez votre message ici..."></textarea>
+                </div>
+                <div class="btn-group">
+                    <button type="button" class="btn btn-secondary" onclick="closeCompose()">Annuler</button>
+                    <button type="button" class="btn btn-primary" onclick="sendEmail()">Envoyer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Notification -->
+    <div class="notification" id="notification">
+        <span id="notificationText"></span>
+    </div>
+
+    <script>
+        let currentFolder = 'inbox';
+        let emailCount = 5;
+
+        function selectFolder(folder) {
+            currentFolder = folder;
+            
+            // Mettre à jour les éléments de la sidebar
+            document.querySelectorAll('.sidebar-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // Mettre à jour le titre
+            const titles = {
+                'inbox': '📥 Boîte de réception',
+                'sent': '📤 Messages envoyés',
+                'drafts': '📝 Brouillons',
+                'spam': '🗑️ Spam',
+                'trash': '🗑️ Corbeille'
+            };
+            document.getElementById('folderTitle').textContent = titles[folder];
+            
+            showNotification(`Dossier sélectionné: ${titles[folder]}`);
+        }
+
+        function openEmail(id) {
+            showNotification(`Email #${id} ouvert`);
+            
+            // Simuler l'ouverture d'un email
+            const emailItem = event.currentTarget;
+            emailItem.classList.remove('unread');
+            emailItem.style.backgroundColor = '#f8f9fa';
+        }
+
+        function openCompose() {
+            document.getElementById('composeModal').style.display = 'block';
+            showNotification('Fenêtre de composition ouverte');
+        }
+
+        function closeCompose() {
+            document.getElementById('composeModal').style.display = 'none';
+            document.getElementById('composeForm').reset();
+            showNotification('Fenêtre de composition fermée');
+        }
+
+        function sendEmail() {
+            const to = document.getElementById('toInput').value;
+            const subject = document.getElementById('subjectInput').value;
+            const message = document.getElementById('messageInput').value;
+            
+            if (to && subject && message) {
+                showNotification(`Email envoyé à ${to} avec l'objet: ${subject}`);
+                closeCompose();
+                
+                // Ajouter l'email à la liste des envoyés
+                addEmailToList('sent', subject, to, message);
+            } else {
+                showNotification('Veuillez remplir tous les champs', 'error');
+            }
+        }
+
+        function addEmailToList(folder, subject, to, message) {
+            const emailList = document.getElementById('emailList');
+            const emailItem = document.createElement('div');
+            emailItem.className = 'email-item';
+            emailItem.innerHTML = `
+                <div class="email-subject">${subject}</div>
+                <div class="email-sender">À: ${to}</div>
+                <div class="email-preview">${message.substring(0, 100)}...</div>
+            `;
+            emailList.insertBefore(emailItem, emailList.firstChild);
+        }
+
+        function showNotification(message, type = 'success') {
+            const notification = document.getElementById('notification');
+            const notificationText = document.getElementById('notificationText');
+            
+            notificationText.textContent = message;
+            notification.style.display = 'block';
+            notification.style.backgroundColor = type === 'error' ? '#dc3545' : '#28a745';
+            
+            setTimeout(() => {
+                notification.style.display = 'none';
+            }, 3000);
+        }
+
+        // Recherche en temps réel
+        document.getElementById('searchInput').addEventListener('input', function(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            const emailItems = document.querySelectorAll('.email-item');
+            
+            emailItems.forEach(item => {
+                const text = item.textContent.toLowerCase();
+                if (text.includes(searchTerm)) {
+                    item.style.display = 'block';
+                } else {
+                    item.style.display = searchTerm ? 'none' : 'block';
+                }
+            });
+            
+            if (searchTerm) {
+                showNotification(`Recherche: "${searchTerm}"`);
+            }
+        });
+
+        // Actions automatiques pour Playwright
+        window.playwrightActions = {
+            clickRandomEmail: function() {
+                const emails = document.querySelectorAll('.email-item');
+                const randomEmail = emails[Math.floor(Math.random() * emails.length)];
+                randomEmail.click();
+                return `Email cliqué: ${randomEmail.querySelector('.email-subject').textContent}`;
+            },
+            
+            composeRandomEmail: function() {
+                openCompose();
+                document.getElementById('toInput').value = 'test@example.com';
+                document.getElementById('subjectInput').value = 'Test automatique Playwright';
+                document.getElementById('messageInput').value = 'Ce message a été généré automatiquement par Playwright pour tester les fonctionnalités.';
+                return 'Email de test composé';
+            },
+            
+            searchRandomTerm: function() {
+                const terms = ['réunion', 'rapport', 'commande', 'anniversaire', 'newsletter'];
+                const randomTerm = terms[Math.floor(Math.random() * terms.length)];
+                document.getElementById('searchInput').value = randomTerm;
+                document.getElementById('searchInput').dispatchEvent(new Event('input'));
+                return `Recherche effectuée: "${randomTerm}"`;
+            },
+            
+            switchFolder: function() {
+                const folders = ['inbox', 'sent', 'drafts', 'spam', 'trash'];
+                const randomFolder = folders[Math.floor(Math.random() * folders.length)];
+                selectFolder(randomFolder);
+                return `Dossier changé: ${randomFolder}`;
+            }
+        };
+
+        // Initialisation
+        showNotification('Gmail Simulateur chargé - Prêt pour les tests Playwright !');
+    </script>
+</body>
+</html>

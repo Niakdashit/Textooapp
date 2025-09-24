@@ -1,0 +1,22 @@
+{
+  "name": "textoo-outlook-debug",
+  "version": "1.0.0",
+  "description": "Script de débogage Playwright pour Outlook",
+  "main": "playwright-outlook-debug.js",
+  "scripts": {
+    "test": "node playwright-outlook-debug.js",
+    "install-browsers": "npx playwright install chromium",
+    "debug": "node playwright-outlook-debug.js"
+  },
+  "dependencies": {
+    "playwright": "^1.55.1"
+  },
+  "keywords": [
+    "outlook",
+    "debug",
+    "playwright",
+    "textoo"
+  ],
+  "author": "Textoo Team",
+  "license": "MIT"
+}
