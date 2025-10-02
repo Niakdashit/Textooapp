@@ -3293,7 +3293,7 @@ border:0;line-height:22px;text-align:center;font-size: 11px;cursor:pointer;
       font: 10px/12px system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif !important;
       width: 14px !important;
       height: 14px !important;
-      border-radius: 7px !important;
+      border-radius: 3px !important;
       display: flex !important;
       align-items: center !important;
       justify-content: center !important;
