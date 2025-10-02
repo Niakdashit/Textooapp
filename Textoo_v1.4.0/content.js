@@ -3627,6 +3627,45 @@ border:0;line-height:22px;text-align:center;font-size: 11px;cursor:pointer;
     }, 100);
   }
 
+  function handleLiveCounterPaste(event) {
+    if (IS_GMAIL || IS_OUTLOOK) return;
+    
+    console.log('PASTE détecté');
+    
+    // Attendre que le contenu soit collé
+    setTimeout(() => {
+      const element = event.target;
+      if (!element) return;
+
+      const genericSel = 'textarea, input[type="text"], input[type="search"], input[type="email"], input[type="url"], input[type="tel"], input:not([type]), [contenteditable=""], [contenteditable="true"]';
+      const isEditable = element.matches && element.matches(genericSel);
+      const isInEditable = element.closest && element.closest(genericSel);
+
+      if (!isEditable && !isInEditable) return;
+
+      const targetElement = isEditable ? element : element.closest(genericSel);
+      if (!targetElement) return;
+
+      console.log('PASTE sur:', targetElement);
+      currentActiveElement = targetElement;
+      createLiveCounter();
+
+      // Mettre à jour le compteur après le collage
+      const text = targetElement.value || targetElement.textContent || '';
+      const errorCount = countErrorsInText(text);
+      console.log('Mise à jour après collage:', errorCount, 'erreurs, texte:', text.length, 'caractères');
+      updateLiveCounterText(errorCount);
+      updateLiveCounterPosition(targetElement);
+
+      // S'assurer que le compteur reste visible
+      if (liveCounter && currentActiveElement) {
+        liveCounter.style.opacity = '1';
+        liveCounter.style.transform = 'scale(1)';
+        liveCounter.style.display = 'flex';
+      }
+    }, 10);
+  }
+
   function handleLiveCounterFocus(event) {
     if (IS_GMAIL || IS_OUTLOOK) return;
     const element = event.target;
@@ -3695,6 +3734,7 @@ border:0;line-height:22px;text-align:center;font-size: 11px;cursor:pointer;
       document.addEventListener('input', handleLiveCounterInput, true);
       document.addEventListener('keyup', handleLiveCounterInput, true);
       document.addEventListener('keydown', handleLiveCounterInput, true);
+      document.addEventListener('paste', handleLiveCounterPaste, true);
       document.addEventListener('focusin', handleLiveCounterFocus, true);
       document.addEventListener('focusout', handleLiveCounterBlur, true);
       document.addEventListener('selectionchange', () => {
@@ -3706,6 +3746,35 @@ border:0;line-height:22px;text-align:center;font-size: 11px;cursor:pointer;
           updateLiveCounterPosition(currentActiveElement);
         }
       }, { passive: true });
+
+      // MutationObserver pour détecter les changements de contenu (pour le collage)
+      const observer = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+          if (mutation.type === 'childList' || mutation.type === 'characterData') {
+            // Vérifier si le changement concerne un élément éditable actif
+            const target = mutation.target;
+            const editableElement = target.closest('textarea, input[type="text"], input[type="search"], input[type="email"], input[type="url"], input[type="tel"], input:not([type]), [contenteditable=""], [contenteditable="true"]');
+            
+            if (editableElement && editableElement === currentActiveElement) {
+              console.log('MUTATION détectée sur élément actif');
+              setTimeout(() => {
+                const text = editableElement.value || editableElement.textContent || '';
+                const errorCount = countErrorsInText(text);
+                console.log('Mise à jour après mutation:', errorCount, 'erreurs');
+                updateLiveCounterText(errorCount);
+                updateLiveCounterPosition(editableElement);
+              }, 10);
+            }
+          }
+        });
+      });
+
+      // Observer tous les changements dans le document
+      observer.observe(document.body, {
+        childList: true,
+        subtree: true,
+        characterData: true
+      });
       
       // Le compteur est maintenant fonctionnel
       
