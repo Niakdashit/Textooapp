@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Compteur Live Textoo</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+            background: #f5f5f5;
+        }
+        
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            background: #fafafa;
+        }
+        
+        .test-section h3 {
+            margin-top: 0;
+            color: #555;
+        }
+        
+        .test-input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 16px;
+            font-family: inherit;
+            resize: vertical;
+            min-height: 100px;
+        }
+        
+        .test-input:focus {
+            outline: none;
+            border-color: #4CAF50;
+            box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
+        }
+        
+        .instructions {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            border-left: 4px solid #2196F3;
+        }
+        
+        .examples {
+            background: #fff3e0;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 15px;
+            border-left: 4px solid #ff9800;
+        }
+        
+        .examples h4 {
+            margin-top: 0;
+            color: #e65100;
+        }
+        
+        .examples ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        
+        .examples li {
+            margin: 5px 0;
+            font-family: monospace;
+            background: #fff;
+            padding: 4px 8px;
+            border-radius: 4px;
+            display: inline-block;
+            margin-right: 10px;
+        }
+        
+        .status {
+            text-align: center;
+            padding: 20px;
+            background: #f0f8ff;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        
+        .status.success {
+            background: #e8f5e8;
+            color: #2e7d32;
+        }
+        
+        .status.error {
+            background: #ffebee;
+            color: #c62828;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Test Compteur Live Textoo</h1>
+        
+        <div class="instructions">
+            <strong>Instructions :</strong> Ce test démontre le nouveau système de compteur de fautes en temps réel pour les autres sites (non-Gmail/Outlook). 
+            Le compteur apparaît automatiquement quand vous tapez dans les champs ci-dessous et suit votre curseur.
+        </div>
+        
+        <div class="test-section">
+            <h3>📝 Zone de texte simple</h3>
+            <textarea class="test-input" placeholder="Tapez du texte ici... Le compteur apparaîtra automatiquement et suivra votre curseur."></textarea>
+        </div>
+        
+        <div class="test-section">
+            <h3>🔍 Champ de recherche</h3>
+            <input type="text" class="test-input" placeholder="Tapez votre recherche ici...">
+        </div>
+        
+        <div class="test-section">
+            <h3>📧 Champ email</h3>
+            <input type="email" class="test-input" placeholder="votre.email@exemple.com">
+        </div>
+        
+        <div class="test-section">
+            <h3>📄 Zone de contenu éditable</h3>
+            <div class="test-input" contenteditable="true" style="min-height: 120px; white-space: pre-wrap;" placeholder="Tapez du contenu ici..."></div>
+        </div>
+        
+        <div class="examples">
+            <h4>💡 Exemples d'erreurs à tester :</h4>
+            <ul>
+                <li>j'ai manger</li>
+                <li>c'est etais</li>
+                <li>c'est etait</li>
+                <li>et est</li>
+                <li>on ont</li>
+            </ul>
+            <p><strong>Note :</strong> Le compteur change de couleur selon le nombre d'erreurs :</p>
+            <ul>
+                <li style="background: #22c55e; color: white;">0 erreur = Vert</li>
+                <li style="background: #f59e0b; color: white;">1 erreur = Orange</li>
+                <li style="background: #e53935; color: white;">2+ erreurs = Rouge</li>
+            </ul>
+        </div>
+        
+        <div class="status" id="status">
+            <div id="statusText">Extension Textoo chargée. Le compteur live est actif pour les autres sites.</div>
+        </div>
+    </div>
+
+    <script>
+        // Vérifier si l'extension est chargée
+        function checkExtensionStatus() {
+            const status = document.getElementById('status');
+            const statusText = document.getElementById('statusText');
+            
+            // Simuler la détection de l'extension
+            if (typeof chrome !== 'undefined' && chrome.runtime) {
+                status.className = 'status success';
+                statusText.textContent = '✅ Extension Textoo détectée. Le compteur live est actif !';
+            } else {
+                status.className = 'status error';
+                statusText.textContent = '❌ Extension Textoo non détectée. Veuillez charger l\'extension dans Chrome/Edge.';
+            }
+        }
+        
+        // Vérifier le statut au chargement
+        document.addEventListener('DOMContentLoaded', checkExtensionStatus);
+        
+        // Ajouter des exemples interactifs
+        const examples = [
+            "j'ai manger des pommes",
+            "c'est etais une bonne idée",
+            "il et est venu hier",
+            "on ont mangé ensemble"
+        ];
+        
+        let exampleIndex = 0;
+        
+        // Fonction pour insérer un exemple
+        function insertExample() {
+            const activeElement = document.activeElement;
+            if (activeElement && (activeElement.tagName === 'TEXTAREA' || activeElement.tagName === 'INPUT' || activeElement.contentEditable === 'true')) {
+                const example = examples[exampleIndex % examples.length];
+                if (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA') {
+                    activeElement.value = example;
+                } else {
+                    activeElement.textContent = example;
+                }
+                exampleIndex++;
+                
+                // Déclencher l'événement input
+                activeElement.dispatchEvent(new Event('input', { bubbles: true }));
+            }
+        }
+        
+        // Ajouter un bouton pour insérer des exemples
+        const button = document.createElement('button');
+        button.textContent = 'Insérer un exemple d\'erreur';
+        button.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            z-index: 1000;
+        `;
+        button.onclick = insertExample;
+        document.body.appendChild(button);
+    </script>
+</body>
+</html>
