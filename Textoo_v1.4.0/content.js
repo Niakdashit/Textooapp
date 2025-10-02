@@ -3335,7 +3335,7 @@ border:0;line-height:22px;text-align:center;font-size: 11px;cursor:pointer;
       }
       
       // Positionner le compteur juste à droite de la fin du texte
-      x += 2; // Décalage réduit pour rapprocher du texte
+      x += 0; // Pas de décalage - collé au texte
       y += lineHeight / 2 - 7; // Centrer verticalement (7 = moitié de la hauteur du compteur)
       
       // S'assurer que le compteur reste visible
