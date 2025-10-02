@@ -3389,74 +3389,115 @@ border:0;line-height:22px;text-align:center;font-size: 11px;cursor:pointer;
   function countErrorsInText(text) {
     if (!text || text.trim().length < 2) return 0;
     
+    // Détection simplifiée et robuste
+    let count = 0;
+    
+    // Erreurs courantes avec regex
+    const commonErrors = [
+      { pattern: /j'ai\s+manger\b/gi, name: "avoir+manger" },
+      { pattern: /c'est\s+etais\b/gi, name: "c'est etais" },
+      { pattern: /c'est\s+etait\b/gi, name: "c'est etait" },
+      { pattern: /\bet\s+est\b/gi, name: "et est" },
+      { pattern: /\bon\s+ont\b/gi, name: "on ont" },
+      { pattern: /\bpulet\b/gi, name: "pulet" },
+      { pattern: /\bpoisson\b/gi, name: "poisson" },
+      { pattern: /\bpoison\b/gi, name: "poison" }
+    ];
+    
+    for (const error of commonErrors) {
+      const matches = text.match(error.pattern);
+      if (matches) {
+        count += matches.length;
+        console.log(`Erreur détectée: ${error.name} (${matches.length})`);
+      }
+    }
+    
+    // Essayer d'utiliser les fonctions avancées si disponibles
     try {
-      // Utiliser les mêmes fonctions de détection que Gmail/Outlook
       const idx = { text: text };
-      let totalErrors = 0;
       
       // Détecter les erreurs "avoir + infinitif" -> participe passé
-      const avoirMatches = a_buildAvoirInfMatches2(idx);
-      totalErrors += avoirMatches.length;
-      
-      // Détecter les erreurs "être + infinitif" -> participe passé
-      const etreMatches = a_buildEtreInfMatches(idx);
-      totalErrors += etreMatches.length;
-      
-      // Détecter "c'est etais" -> "c'était"
-      const ctetaitMatches = a_buildCTetaitMatches(idx);
-      totalErrors += ctetaitMatches.length;
-      
-      // Détecter les erreurs de base avec les règles offline
-      if (typeof window.TextooOfflineRules !== 'undefined') {
-        const offlineMatches = window.TextooOfflineRules.checkText(text);
-        if (offlineMatches) {
-          totalErrors += offlineMatches.length;
+      if (typeof a_buildAvoirInfMatches2 === 'function') {
+        const avoirMatches = a_buildAvoirInfMatches2(idx);
+        count += avoirMatches.length;
+        if (avoirMatches.length > 0) {
+          console.log(`Erreurs avoir+inf: ${avoirMatches.length}`);
         }
       }
       
-      return totalErrors;
-    } catch (e) {
-      // Fallback: détection basique
-      let count = 0;
-      const commonErrors = [
-        /j'ai\s+manger\b/gi,
-        /c'est\s+etais\b/gi,
-        /c'est\s+etait\b/gi,
-        /\bet\s+est\b/gi,
-        /\bon\s+ont\b/gi,
-        /pulet\b/gi,
-        /poulet\b/gi
-      ];
-      for (const pattern of commonErrors) {
-        const matches = text.match(pattern);
-        if (matches) count += matches.length;
+      // Détecter les erreurs "être + infinitif" -> participe passé
+      if (typeof a_buildEtreInfMatches === 'function') {
+        const etreMatches = a_buildEtreInfMatches(idx);
+        count += etreMatches.length;
+        if (etreMatches.length > 0) {
+          console.log(`Erreurs être+inf: ${etreMatches.length}`);
+        }
       }
-      return count;
+      
+      // Détecter "c'est etais" -> "c'était"
+      if (typeof a_buildCTetaitMatches === 'function') {
+        const ctetaitMatches = a_buildCTetaitMatches(idx);
+        count += ctetaitMatches.length;
+        if (ctetaitMatches.length > 0) {
+          console.log(`Erreurs c'est etais: ${ctetaitMatches.length}`);
+        }
+      }
+      
+    } catch (e) {
+      console.log('Erreur dans les fonctions avancées:', e);
     }
+    
+    console.log(`Total d'erreurs détectées: ${count} pour le texte: "${text}"`);
+    return count;
   }
 
   function handleLiveCounterInput(event) {
-    if (IS_GMAIL || IS_OUTLOOK) return;
+    if (IS_GMAIL || IS_OUTLOOK) {
+      console.log('Compteur live ignoré pour Gmail/Outlook');
+      return;
+    }
+    
     const element = event.target;
-    if (!element) return;
+    if (!element) {
+      console.log('Pas d\'élément cible');
+      return;
+    }
+    
+    console.log('Événement input détecté sur:', element);
+    
     const genericSel = 'textarea, input[type="text"], input[type="search"], input[type="email"], input[type="url"], input[type="tel"], input:not([type]), [contenteditable=""], [contenteditable="true"]';
     const isEditable = element.matches && element.matches(genericSel);
     const isInEditable = element.closest && element.closest(genericSel);
-    if (!isEditable && !isInEditable) return;
+    
+    if (!isEditable && !isInEditable) {
+      console.log('Élément non éditable');
+      return;
+    }
+    
     const targetElement = isEditable ? element : element.closest(genericSel);
-    if (!targetElement) return;
+    if (!targetElement) {
+      console.log('Pas d\'élément éditable trouvé');
+      return;
+    }
+    
+    console.log('Élément éditable trouvé:', targetElement);
     currentActiveElement = targetElement;
     createLiveCounter();
+    
     if (liveCounterTimeout) {
       clearTimeout(liveCounterTimeout);
     }
+    
     liveCounterTimeout = setTimeout(() => {
       try {
         const text = targetElement.value || targetElement.textContent || '';
+        console.log('Texte à analyser:', text);
         const errorCount = countErrorsInText(text);
+        console.log('Nombre d\'erreurs:', errorCount);
         updateLiveCounterText(errorCount);
         updateLiveCounterPosition(targetElement);
       } catch (e) {
+        console.error('Erreur dans handleLiveCounterInput:', e);
         hideLiveCounter();
       }
     }, 300);
@@ -3490,8 +3531,16 @@ border:0;line-height:22px;text-align:center;font-size: 11px;cursor:pointer;
   }
 
   function initLiveCounter() {
-    if (IS_GMAIL || IS_OUTLOOK) return;
+    console.log('Initialisation du compteur live...');
+    console.log('IS_GMAIL:', IS_GMAIL, 'IS_OUTLOOK:', IS_OUTLOOK);
+    
+    if (IS_GMAIL || IS_OUTLOOK) {
+      console.log('Compteur live ignoré pour Gmail/Outlook');
+      return;
+    }
+    
     try {
+      console.log('Ajout des event listeners pour le compteur live');
       document.addEventListener('input', handleLiveCounterInput, true);
       document.addEventListener('focusin', handleLiveCounterFocus, true);
       document.addEventListener('focusout', handleLiveCounterBlur, true);
@@ -3505,8 +3554,9 @@ border:0;line-height:22px;text-align:center;font-size: 11px;cursor:pointer;
           updateLiveCounterPosition(currentActiveElement);
         }
       }, { passive: true });
+      console.log('Compteur live initialisé avec succès');
     } catch (e) {
-      console.warn('Erreur initialisation compteur live:', e);
+      console.error('Erreur initialisation compteur live:', e);
     }
   }
 
