@@ -3327,15 +3327,15 @@ border:0;line-height:22px;text-align:center;font-size: 11px;cursor:pointer;
       let x = rect.left;
       let y = rect.top;
       
-      // TOUJOURS positionner à la fin du texte, même en cas de sélection
-      if (text.length > 0) {
-        // Calculer la position de la fin du texte de manière plus précise
-        // Utiliser la largeur réelle de l'élément moins une marge pour le compteur
-        const availableWidth = rect.width - 30; // Marge pour le compteur
-        const textWidth = Math.min(text.length * charWidth, availableWidth);
-        x += textWidth;
+      // TOUJOURS positionner à la position du curseur (caret)
+      const cursorPos = getCursorPosition(element);
+      if (cursorPos > 0) {
+        // Calculer la position du curseur
+        const textBeforeCursor = text.substring(0, cursorPos);
+        const textWidth = textBeforeCursor.length * charWidth;
+        x += Math.min(textWidth, rect.width - 30); // Marge pour le compteur
       } else {
-        // Si le texte est vide, positionner au début
+        // Si le curseur est au début, positionner au début
         x = rect.left;
       }
       
@@ -3675,8 +3675,10 @@ border:0;line-height:22px;text-align:center;font-size: 11px;cursor:pointer;
       document.addEventListener('focusin', handleLiveCounterFocus, true);
       document.addEventListener('focusout', handleLiveCounterBlur, true);
       document.addEventListener('selectionchange', () => {
-        // Ne pas repositionner le compteur lors des sélections
-        // Il doit rester à la fin du texte
+        // Repositionner le compteur selon la position du curseur
+        if (currentActiveElement && liveCounter) {
+          updateLiveCounterPosition(currentActiveElement);
+        }
       });
       window.addEventListener('scroll', () => {
         if (liveCounter && currentActiveElement) {
