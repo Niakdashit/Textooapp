@@ -3446,11 +3446,20 @@ border:0;line-height:22px;text-align:center;font-size: 11px;cursor:pointer;
     }
   }
 
+  // Cache pour éviter les analyses répétitives
+  const textAnalysisCache = new Map();
+  
   function countErrorsInText(text) {
     if (!text || text.trim().length < 2) return 0;
     
+    // Vérifier le cache pour éviter les analyses répétitives
+    const cacheKey = text.trim();
+    if (textAnalysisCache.has(cacheKey)) {
+      return textAnalysisCache.get(cacheKey);
+    }
+    
     let count = 0;
-    console.log(`=== ANALYSE DU TEXTE: "${text}" ===`);
+    console.log(`=== ANALYSE DU TEXTE: "${text.substring(0, 50)}${text.length > 50 ? '...' : ''}" ===`);
     
     // 1. UTILISER LE SYSTÈME EXISTANT DE L'EXTENSION EN PRIORITÉ
     try {
@@ -3505,46 +3514,58 @@ border:0;line-height:22px;text-align:center;font-size: 11px;cursor:pointer;
       console.log('Aucune erreur détectée par le système principal, utilisation des patterns de fallback...');
       
       const fallbackErrors = [
-        // Erreurs de conjugaison courantes
+        // ===== ERREURS CRITIQUES DU TEXTE ACTUEL =====
+        
+        // 1. "nous avons manger" → "nous avons mangé" (accord participe passé avec avoir)
+        { pattern: /\bnous\s+avons\s+manger\b/gi, name: "nous avons manger → nous avons mangé" },
+        { pattern: /\bils\s+ont\s+manger\b/gi, name: "ils ont manger → ils ont mangé" },
+        { pattern: /\belles\s+ont\s+manger\b/gi, name: "elles ont manger → elles ont mangé" },
+        
+        // 2. "manger" seul après avoir (participe passé manquant)
+        { pattern: /\bmanger\b/gi, name: "manger → mangé (participe passé)" },
+        
+        // 3. "de la poulet" → "de la poule" (genre incorrect)
+        { pattern: /\bde\s+la\s+poulet\b/gi, name: "de la poulet → de la poule" },
+        { pattern: /\bpoulet\b/gi, name: "poulet → poule (genre féminin)" },
+        
+        // ===== ERREURS DE CONJUGAISON COURANTES =====
         { pattern: /j'ai\s+(manger|etre|avoir|faire|aller|venir|voir|savoir|prendre)\b/gi, name: "j'ai + infinitif" },
         { pattern: /\b(je|tu|il|elle|nous|vous|ils|elles)\s+(manger|etre|avoir|faire|aller|venir|voir|savoir|prendre)\b/gi, name: "sujet + infinitif" },
         
-        // Erreurs après "pouvoir"
+        // ===== ERREURS APRÈS "POUVOIR" =====
         { pattern: /\bpouvoir\s+(mangé|bu|vu|pris|fait|dit|mis|été)\b/gi, name: "pouvoir + participe passé" },
         
-        // Erreurs d'accord - patterns plus robustes
+        // ===== ERREURS D'ACCORD =====
         { pattern: /\b(la|une)\s+(polices|maisons|voitures|chats|chiens|livres|semaines|mois|jours)\b/gi, name: "article singulier + nom pluriel" },
         { pattern: /\b(le|un)\s+(polices|maisons|voitures|chats|chiens|livres|semaines|mois|jours)\b/gi, name: "article masculin + nom pluriel" },
         
-        // Patterns spécifiques pour les erreurs individuelles
+        // ===== PATTERNS SPÉCIFIQUES =====
         { pattern: /\bpolices\b/gi, name: "polices → police (singulier)" },
         { pattern: /\bsemaines\b/gi, name: "semaines → semaine (singulier)" },
         
-        // Erreurs de participes passés
+        // ===== ERREURS DE PARTICIPES PASSÉS =====
         { pattern: /\bvenir\s+(nous|vous)\s+(cherché|mangé|bu|vu|pris|fait|dit|mis|vu|été)\b/gi, name: "venir nous + participe passé" },
         { pattern: /\baller\s+(nous|vous)\s+(cherché|mangé|bu|vu|pris|fait|dit|mis|vu|été)\b/gi, name: "aller nous + participe passé" },
-        
-        // Pattern spécifique pour "cherché" après "venir nous"
         { pattern: /\bcherché\b/gi, name: "cherché → chercher (infinitif)" },
         
-        // Erreurs d'accents manquants
+        // ===== ERREURS D'ACCENTS MANQUANTS =====
         { pattern: /\bpere\b/gi, name: "pere → père" },
         { pattern: /\bmere\b/gi, name: "mere → mère" },
         { pattern: /\bmeme\b/gi, name: "meme → même" },
         { pattern: /\bgout\b/gi, name: "gout → goût" },
         { pattern: /\bcomprend\b/gi, name: "comprend → comprends" },
         
-        // Erreur "a" → "à" (préposition sans accent)
+        // ===== ERREURS DE PRÉPOSITIONS =====
         { pattern: /\ba\s+la\b/gi, name: "a la → à la" },
         
-        // Erreurs spécifiques du texte de l'utilisateur
+        // ===== ERREURS SPÉCIFIQUES HISTORIQUES =====
         { pattern: /\bpoulets\b/gi, name: "poulets (accord)" },
         { pattern: /\bpreparée\b/gi, name: "préparée → préparé" },
         { pattern: /\bpa\b/gi, name: "pa → pas" },
         { pattern: /\bmangé\b/gi, name: "mangé → manger" },
         { pattern: /\bfraise\b/gi, name: "fraise → fraises" },
         
-        // Erreurs générales
+        // ===== ERREURS GÉNÉRALES =====
         { pattern: /\bappler\b/gi, name: "appler → appeler" },
         { pattern: /c'est\s+(etais|etait)\b/gi, name: "c'est etais/etait" },
         { pattern: /\bet\s+est\b/gi, name: "et est" },
@@ -3558,6 +3579,15 @@ border:0;line-height:22px;text-align:center;font-size: 11px;cursor:pointer;
           console.log(`Erreur fallback détectée: ${error.name} (${matches.length})`);
         }
       }
+    }
+    
+    // Mettre en cache le résultat
+    textAnalysisCache.set(cacheKey, count);
+    
+    // Limiter la taille du cache pour éviter les fuites mémoire
+    if (textAnalysisCache.size > 100) {
+      const firstKey = textAnalysisCache.keys().next().value;
+      textAnalysisCache.delete(firstKey);
     }
     
     console.log(`=== TOTAL FINAL: ${count} erreurs détectées ===`);
@@ -3587,14 +3617,11 @@ border:0;line-height:22px;text-align:center;font-size: 11px;cursor:pointer;
       clearTimeout(liveCounterTimeout);
     }
     
-    // Mise à jour immédiate du compteur pour le temps réel
+    // Mise à jour optimisée du compteur
     try {
       const text = targetElement.value || targetElement.textContent || '';
-      const errorCount = countErrorsInText(text);
-      console.log('Mise à jour immédiate compteur:', errorCount, 'erreurs, texte:', text.length, 'caractères');
-      updateLiveCounterText(errorCount);
       
-      // Recalculer la position à chaque fois pour suivre les suppressions
+      // Mise à jour immédiate de la position (sans analyse d'erreurs)
       updateLiveCounterPosition(targetElement);
       
       // S'assurer que le compteur reste visible
@@ -3604,22 +3631,22 @@ border:0;line-height:22px;text-align:center;font-size: 11px;cursor:pointer;
         liveCounter.style.display = 'flex';
       }
     } catch (e) {
-      console.error('Erreur dans handleLiveCounterInput immédiat:', e);
+      console.error('Erreur dans handleLiveCounterInput position:', e);
     }
-    
-    // Mise à jour de confirmation avec délai très court
+
+    // Mise à jour de l'analyse d'erreurs avec délai optimisé
     liveCounterTimeout = setTimeout(() => {
       try {
         const text = targetElement.value || targetElement.textContent || '';
         const errorCount = countErrorsInText(text);
-        console.log('Mise à jour confirmation compteur:', errorCount, 'erreurs');
+        console.log('Mise à jour compteur:', errorCount, 'erreurs, texte:', text.length, 'caractères');
         updateLiveCounterText(errorCount);
         updateLiveCounterPosition(targetElement);
       } catch (e) {
-        console.error('Erreur dans handleLiveCounterInput confirmation:', e);
+        console.error('Erreur dans handleLiveCounterInput analyse:', e);
         hideLiveCounter();
       }
-    }, 50); // Délai très court pour confirmation
+    }, 100); // Délai optimisé pour réduire les appels
   }
 
   function handleLiveCounterFocus(event) {
