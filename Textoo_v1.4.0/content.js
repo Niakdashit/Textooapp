@@ -3317,7 +3317,7 @@ border:0;line-height:22px;text-align:center;font-size: 11px;cursor:pointer;
     if (!liveCounter || !element) return;
     try {
       const rect = element.getBoundingClientRect();
-      const cursorPos = getCursorPosition(element);
+      const text = element.value || element.textContent || '';
       
       // Calculer la position précise du curseur
       const charWidth = 8; // Largeur approximative d'un caractère
@@ -3327,15 +3327,14 @@ border:0;line-height:22px;text-align:center;font-size: 11px;cursor:pointer;
       let x = rect.left;
       let y = rect.top;
       
-      // Ajuster selon la position du curseur
-      if (cursorPos > 0) {
-        // Calculer la position horizontale du curseur
-        const textBeforeCursor = (element.value || element.textContent || '').substring(0, cursorPos);
-        const textWidth = textBeforeCursor.length * charWidth;
+      // TOUJOURS positionner à la fin du texte, même en cas de sélection
+      if (text.length > 0) {
+        // Calculer la position de la fin du texte
+        const textWidth = text.length * charWidth;
         x += Math.min(textWidth, rect.width - 20);
       }
       
-      // Positionner le compteur juste à droite du curseur
+      // Positionner le compteur juste à droite de la fin du texte
       x += 5; // Petit décalage pour ne pas coller au texte
       y += lineHeight / 2 - 7; // Centrer verticalement (7 = moitié de la hauteur du compteur)
       
@@ -3359,7 +3358,7 @@ border:0;line-height:22px;text-align:center;font-size: 11px;cursor:pointer;
       liveCounter.style.left = x + 'px';
       liveCounter.style.top = y + 'px';
       
-      console.log('Position du compteur:', x, y, 'curseur:', cursorPos);
+      console.log('Position du compteur à la fin du texte:', x, y, 'longueur:', text.length);
     } catch (e) {
       console.error('Erreur positionnement:', e);
     }
@@ -3595,9 +3594,8 @@ border:0;line-height:22px;text-align:center;font-size: 11px;cursor:pointer;
       document.addEventListener('focusin', handleLiveCounterFocus, true);
       document.addEventListener('focusout', handleLiveCounterBlur, true);
       document.addEventListener('selectionchange', () => {
-        if (currentActiveElement && liveCounter) {
-          updateLiveCounterPosition(currentActiveElement);
-        }
+        // Ne pas repositionner le compteur lors des sélections
+        // Il doit rester à la fin du texte
       });
       window.addEventListener('scroll', () => {
         if (liveCounter && currentActiveElement) {
