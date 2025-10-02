@@ -3509,13 +3509,20 @@ border:0;line-height:22px;text-align:center;font-size: 11px;cursor:pointer;
         { pattern: /j'ai\s+(manger|etre|avoir|faire|aller|venir|voir|savoir|prendre)\b/gi, name: "j'ai + infinitif" },
         { pattern: /\b(je|tu|il|elle|nous|vous|ils|elles)\s+(manger|etre|avoir|faire|aller|venir|voir|savoir|prendre)\b/gi, name: "sujet + infinitif" },
         
-        // Erreurs d'accord
+        // Erreurs d'accord - patterns plus robustes
         { pattern: /\b(la|une)\s+(polices|maisons|voitures|chats|chiens|livres|semaines|mois|jours)\b/gi, name: "article singulier + nom pluriel" },
         { pattern: /\b(le|un)\s+(polices|maisons|voitures|chats|chiens|livres|semaines|mois|jours)\b/gi, name: "article masculin + nom pluriel" },
+        
+        // Patterns spécifiques pour les erreurs individuelles
+        { pattern: /\bpolices\b/gi, name: "polices → police (singulier)" },
+        { pattern: /\bsemaines\b/gi, name: "semaines → semaine (singulier)" },
         
         // Erreurs de participes passés
         { pattern: /\bvenir\s+(nous|vous)\s+(cherché|mangé|bu|vu|pris|fait|dit|mis|vu|été)\b/gi, name: "venir nous + participe passé" },
         { pattern: /\baller\s+(nous|vous)\s+(cherché|mangé|bu|vu|pris|fait|dit|mis|vu|été)\b/gi, name: "aller nous + participe passé" },
+        
+        // Pattern spécifique pour "cherché" après "venir nous"
+        { pattern: /\bcherché\b/gi, name: "cherché → chercher (infinitif)" },
         
         // Erreurs d'accents manquants
         { pattern: /\bpere\b/gi, name: "pere → père" },
