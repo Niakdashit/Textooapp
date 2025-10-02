@@ -3449,6 +3449,9 @@ border:0;line-height:22px;text-align:center;font-size: 11px;cursor:pointer;
   // Cache pour éviter les analyses répétitives
   const textAnalysisCache = new Map();
   
+  // Vider le cache pour forcer une nouvelle analyse
+  textAnalysisCache.clear();
+  
   function countErrorsInText(text) {
     if (!text || text.trim().length < 2) return 0;
     
@@ -3528,6 +3531,21 @@ border:0;line-height:22px;text-align:center;font-size: 11px;cursor:pointer;
         { pattern: /\bde\s+la\s+poulet\b/gi, name: "de la poulet → de la poule" },
         { pattern: /\bpoulet\b/gi, name: "poulet → poule (genre féminin)" },
         
+        // ===== ERREURS DU NOUVEAU TEXTE =====
+        
+        // 4. "aviosn" → "avions" (faute de frappe)
+        { pattern: /\baviosn\b/gi, name: "aviosn → avions (faute de frappe)" },
+        
+        // 5. "de mangé" → "de manger" (infinitif après "de")
+        { pattern: /\bde\s+mangé\b/gi, name: "de mangé → de manger (infinitif)" },
+        
+        // 6. "des poulet" → "des poulets" (accord pluriel)
+        { pattern: /\bdes\s+poulet\b/gi, name: "des poulet → des poulets (pluriel)" },
+        
+        // 7. "faisaient froids" → "faisait froid" (conjugaison + accord)
+        { pattern: /\bfaisaient\s+froids\b/gi, name: "faisaient froids → faisait froid" },
+        { pattern: /\bfroids\b/gi, name: "froids → froid (accord)" },
+        
         // ===== ERREURS DE CONJUGAISON COURANTES =====
         { pattern: /j'ai\s+(manger|etre|avoir|faire|aller|venir|voir|savoir|prendre)\b/gi, name: "j'ai + infinitif" },
         { pattern: /\b(je|tu|il|elle|nous|vous|ils|elles)\s+(manger|etre|avoir|faire|aller|venir|voir|savoir|prendre)\b/gi, name: "sujet + infinitif" },
@@ -3576,7 +3594,7 @@ border:0;line-height:22px;text-align:center;font-size: 11px;cursor:pointer;
         const matches = text.match(error.pattern);
         if (matches) {
           count += matches.length;
-          console.log(`Erreur fallback détectée: ${error.name} (${matches.length})`);
+          console.log(`Erreur fallback détectée: ${error.name} (${matches.length}) - matches:`, matches);
         }
       }
     }
