@@ -3283,9 +3283,32 @@ border:0;line-height:22px;text-align:center;font-size: 11px;cursor:pointer;
     
     console.log('Création du compteur live');
     liveCounter = document.createElement('div');
+    liveCounter.id = 'textoo-live-counter-badge';
     liveCounter.className = 'textoo-live-counter';
     liveCounter.textContent = '0';
-    liveCounter.style.display = 'none';
+    liveCounter.style.cssText = `
+      position: fixed !important;
+      background: #e53935 !important;
+      color: #fff !important;
+      font: 10px/12px system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif !important;
+      width: 14px !important;
+      height: 14px !important;
+      border-radius: 7px !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      z-index: 2147483647 !important;
+      box-shadow: 0 1px 2px rgba(0,0,0,.25) !important;
+      pointer-events: none !important;
+      user-select: none !important;
+      opacity: 0 !important;
+      transform: scale(0.8) !important;
+      transition: opacity 0.2s ease, transform 0.2s ease !important;
+      font-weight: 500 !important;
+      text-align: center !important;
+      min-width: 14px !important;
+      min-height: 14px !important;
+    `;
     document.body.appendChild(liveCounter);
     console.log('Compteur créé et ajouté au DOM');
     return liveCounter;
@@ -3295,49 +3318,32 @@ border:0;line-height:22px;text-align:center;font-size: 11px;cursor:pointer;
     if (!liveCounter || !element) return;
     try {
       const rect = element.getBoundingClientRect();
-      const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-      const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
       const cursorPos = getCursorPosition(element);
       
-      // Calculer la position du curseur plus précisément
-      const charWidth = 8; // Estimation de la largeur d'un caractère
-      const lineHeight = 16; // Hauteur de ligne plus réaliste
-      
-      // Position de base : coin supérieur gauche de l'élément
-      let x = rect.left + scrollLeft;
-      let y = rect.top + scrollTop;
+      // Position simple : à droite de l'élément, légèrement en dessous
+      let x = rect.right + 10;
+      let y = rect.top + 5;
       
       // Ajuster selon la position du curseur
       if (cursorPos > 0) {
-        x += Math.min(cursorPos * charWidth, rect.width - 20);
+        const charWidth = 8;
+        x = rect.left + Math.min(cursorPos * charWidth, rect.width) + 10;
       }
       
-      // Positionner le compteur juste après le curseur, légèrement décalé
-      x += 5; // Petit décalage pour ne pas coller au texte
-      y += lineHeight + 2; // Juste en dessous de la ligne de texte
-      
-      // Ajuster si le compteur sort de l'écran
-      const counterSize = 14;
-      const margin = 5;
-      
-      if (x + counterSize + margin > window.innerWidth) {
-        x = window.innerWidth - counterSize - margin;
+      // S'assurer que le compteur reste visible
+      if (x + 20 > window.innerWidth) {
+        x = window.innerWidth - 30;
       }
-      if (x < margin) {
-        x = margin;
-      }
-      if (y + counterSize + margin > window.innerHeight) {
-        y = rect.top + scrollTop - counterSize - margin;
-      }
-      if (y < margin) {
-        y = margin;
+      if (y + 20 > window.innerHeight) {
+        y = rect.bottom - 25;
       }
       
       liveCounter.style.left = x + 'px';
       liveCounter.style.top = y + 'px';
+      
+      console.log('Position du compteur:', x, y);
     } catch (e) {
-      // En cas d'erreur, masquer le compteur
-      if (liveCounter) liveCounter.style.display = 'none';
+      console.error('Erreur positionnement:', e);
     }
   }
 
@@ -3372,22 +3378,20 @@ border:0;line-height:22px;text-align:center;font-size: 11px;cursor:pointer;
     // Mettre à jour le texte
     liveCounter.textContent = count.toString();
     
-    // Réinitialiser les classes
-    liveCounter.className = 'textoo-live-counter';
-    
-    // Appliquer la classe de couleur appropriée
+    // Appliquer la couleur directement via style
     if (count === 0) {
-      liveCounter.classList.add('zero');
+      liveCounter.style.background = '#22c55e';
     } else if (count === 1) {
-      liveCounter.classList.add('one');
+      liveCounter.style.background = '#f59e0b';
     } else {
-      liveCounter.classList.add('many');
+      liveCounter.style.background = '#e53935';
     }
     
-    // Afficher le compteur avec animation
-    liveCounter.classList.add('visible');
+    // Afficher le compteur
+    liveCounter.style.opacity = '1';
+    liveCounter.style.transform = 'scale(1)';
     
-    console.log('Compteur mis à jour:', liveCounter.textContent, 'classes:', liveCounter.className);
+    console.log('Compteur mis à jour:', liveCounter.textContent, 'couleur:', liveCounter.style.background);
   }
 
   function hideLiveCounter() {
@@ -3528,6 +3532,15 @@ border:0;line-height:22px;text-align:center;font-size: 11px;cursor:pointer;
     }, 100);
   }
 
+  function testLiveCounter() {
+    console.log('Test du compteur live...');
+    createLiveCounter();
+    updateLiveCounterText(2);
+    liveCounter.style.left = '100px';
+    liveCounter.style.top = '100px';
+    console.log('Compteur de test affiché');
+  }
+
   function initLiveCounter() {
     console.log('Initialisation du compteur live...');
     console.log('IS_GMAIL:', IS_GMAIL, 'IS_OUTLOOK:', IS_OUTLOOK);
@@ -3553,6 +3566,12 @@ border:0;line-height:22px;text-align:center;font-size: 11px;cursor:pointer;
           updateLiveCounterPosition(currentActiveElement);
         }
       }, { passive: true });
+      
+      // Test immédiat du compteur
+      setTimeout(() => {
+        testLiveCounter();
+      }, 1000);
+      
       console.log('Compteur live initialisé avec succès');
     } catch (e) {
       console.error('Erreur initialisation compteur live:', e);
