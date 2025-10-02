@@ -3292,22 +3292,45 @@ border:0;line-height:22px;text-align:center;font-size: 11px;cursor:pointer;
       const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
       const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
       const cursorPos = getCursorPosition(element);
-      const charWidth = 8;
-      const lineHeight = 20;
-      let x = rect.left + scrollLeft + (cursorPos * charWidth);
-      let y = rect.top + scrollTop + lineHeight;
-      const counterWidth = 20;
-      const counterHeight = 18;
-      if (x + counterWidth > window.innerWidth) {
-        x = window.innerWidth - counterWidth - 10;
+      
+      // Calculer la position du curseur plus précisément
+      const charWidth = 8; // Estimation de la largeur d'un caractère
+      const lineHeight = 16; // Hauteur de ligne plus réaliste
+      
+      // Position de base : coin supérieur gauche de l'élément
+      let x = rect.left + scrollLeft;
+      let y = rect.top + scrollTop;
+      
+      // Ajuster selon la position du curseur
+      if (cursorPos > 0) {
+        x += Math.min(cursorPos * charWidth, rect.width - 20);
       }
-      if (y + counterHeight > window.innerHeight) {
-        y = rect.top + scrollTop - counterHeight - 5;
+      
+      // Positionner le compteur juste après le curseur, légèrement décalé
+      x += 5; // Petit décalage pour ne pas coller au texte
+      y += lineHeight + 2; // Juste en dessous de la ligne de texte
+      
+      // Ajuster si le compteur sort de l'écran
+      const counterSize = 14;
+      const margin = 5;
+      
+      if (x + counterSize + margin > window.innerWidth) {
+        x = window.innerWidth - counterSize - margin;
       }
+      if (x < margin) {
+        x = margin;
+      }
+      if (y + counterSize + margin > window.innerHeight) {
+        y = rect.top + scrollTop - counterSize - margin;
+      }
+      if (y < margin) {
+        y = margin;
+      }
+      
       liveCounter.style.left = x + 'px';
       liveCounter.style.top = y + 'px';
-      liveCounter.style.display = 'block';
     } catch (e) {
+      // En cas d'erreur, masquer le compteur
       if (liveCounter) liveCounter.style.display = 'none';
     }
   }
@@ -3334,8 +3357,14 @@ border:0;line-height:22px;text-align:center;font-size: 11px;cursor:pointer;
 
   function updateLiveCounterText(count) {
     if (!liveCounter) return;
+    
+    // Mettre à jour le texte
     liveCounter.textContent = count.toString();
+    
+    // Réinitialiser les classes
     liveCounter.className = 'textoo-live-counter';
+    
+    // Appliquer la classe de couleur appropriée
     if (count === 0) {
       liveCounter.classList.add('zero');
     } else if (count === 1) {
@@ -3343,6 +3372,8 @@ border:0;line-height:22px;text-align:center;font-size: 11px;cursor:pointer;
     } else {
       liveCounter.classList.add('many');
     }
+    
+    // Afficher le compteur avec animation
     liveCounter.classList.add('visible');
   }
 
@@ -3357,19 +3388,44 @@ border:0;line-height:22px;text-align:center;font-size: 11px;cursor:pointer;
 
   function countErrorsInText(text) {
     if (!text || text.trim().length < 2) return 0;
+    
     try {
+      // Utiliser les mêmes fonctions de détection que Gmail/Outlook
+      const idx = { text: text };
+      let totalErrors = 0;
+      
+      // Détecter les erreurs "avoir + infinitif" -> participe passé
+      const avoirMatches = a_buildAvoirInfMatches2(idx);
+      totalErrors += avoirMatches.length;
+      
+      // Détecter les erreurs "être + infinitif" -> participe passé
+      const etreMatches = a_buildEtreInfMatches(idx);
+      totalErrors += etreMatches.length;
+      
+      // Détecter "c'est etais" -> "c'était"
+      const ctetaitMatches = a_buildCTetaitMatches(idx);
+      totalErrors += ctetaitMatches.length;
+      
+      // Détecter les erreurs de base avec les règles offline
       if (typeof window.TextooOfflineRules !== 'undefined') {
-        const matches = window.TextooOfflineRules.checkText(text);
-        return matches ? matches.length : 0;
+        const offlineMatches = window.TextooOfflineRules.checkText(text);
+        if (offlineMatches) {
+          totalErrors += offlineMatches.length;
+        }
       }
+      
+      return totalErrors;
     } catch (e) {
+      // Fallback: détection basique
       let count = 0;
       const commonErrors = [
         /j'ai\s+manger\b/gi,
         /c'est\s+etais\b/gi,
         /c'est\s+etait\b/gi,
         /\bet\s+est\b/gi,
-        /\bon\s+ont\b/gi
+        /\bon\s+ont\b/gi,
+        /pulet\b/gi,
+        /poulet\b/gi
       ];
       for (const pattern of commonErrors) {
         const matches = text.match(pattern);
@@ -3377,7 +3433,6 @@ border:0;line-height:22px;text-align:center;font-size: 11px;cursor:pointer;
       }
       return count;
     }
-    return 0;
   }
 
   function handleLiveCounterInput(event) {
