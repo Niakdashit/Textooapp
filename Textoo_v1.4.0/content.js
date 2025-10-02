@@ -3773,19 +3773,27 @@ border:0;line-height:22px;text-align:center;font-size: 11px;cursor:pointer;
       const observer = new MutationObserver((mutations) => {
         mutations.forEach((mutation) => {
           if (mutation.type === 'childList' || mutation.type === 'characterData') {
-            // Vérifier si le changement concerne un élément éditable actif
-            const target = mutation.target;
-            const editableElement = target.closest('textarea, input[type="text"], input[type="search"], input[type="email"], input[type="url"], input[type="tel"], input:not([type]), [contenteditable=""], [contenteditable="true"]');
-            
-            if (editableElement && editableElement === currentActiveElement) {
-              console.log('MUTATION détectée sur élément actif');
-              setTimeout(() => {
-                const text = editableElement.value || editableElement.textContent || '';
-                const errorCount = countErrorsInText(text);
-                console.log('Mise à jour après mutation:', errorCount, 'erreurs');
-                updateLiveCounterText(errorCount);
-                updateLiveCounterPosition(editableElement);
-              }, 10);
+            try {
+              // Vérifier si le changement concerne un élément éditable actif
+              const target = mutation.target;
+              
+              // Vérifier que target est un élément DOM valide avec la méthode closest
+              if (target && typeof target.closest === 'function') {
+                const editableElement = target.closest('textarea, input[type="text"], input[type="search"], input[type="email"], input[type="url"], input[type="tel"], input:not([type]), [contenteditable=""], [contenteditable="true"]');
+                
+                if (editableElement && editableElement === currentActiveElement) {
+                  console.log('MUTATION détectée sur élément actif');
+                  setTimeout(() => {
+                    const text = editableElement.value || editableElement.textContent || '';
+                    const errorCount = countErrorsInText(text);
+                    console.log('Mise à jour après mutation:', errorCount, 'erreurs');
+                    updateLiveCounterText(errorCount);
+                    updateLiveCounterPosition(editableElement);
+                  }, 10);
+                }
+              }
+            } catch (e) {
+              console.log('Erreur dans MutationObserver:', e);
             }
           }
         });
