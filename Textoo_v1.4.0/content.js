@@ -3276,12 +3276,18 @@ border:0;line-height:22px;text-align:center;font-size: 11px;cursor:pointer;
   let liveCounterTimeout = null;
 
   function createLiveCounter() {
-    if (liveCounter) return liveCounter;
+    if (liveCounter) {
+      console.log('Compteur déjà créé');
+      return liveCounter;
+    }
+    
+    console.log('Création du compteur live');
     liveCounter = document.createElement('div');
     liveCounter.className = 'textoo-live-counter';
     liveCounter.textContent = '0';
     liveCounter.style.display = 'none';
     document.body.appendChild(liveCounter);
+    console.log('Compteur créé et ajouté au DOM');
     return liveCounter;
   }
 
@@ -3356,7 +3362,12 @@ border:0;line-height:22px;text-align:center;font-size: 11px;cursor:pointer;
   }
 
   function updateLiveCounterText(count) {
-    if (!liveCounter) return;
+    if (!liveCounter) {
+      console.log('Pas de compteur à mettre à jour');
+      return;
+    }
+    
+    console.log('Mise à jour du compteur avec', count, 'erreurs');
     
     // Mettre à jour le texte
     liveCounter.textContent = count.toString();
@@ -3375,6 +3386,8 @@ border:0;line-height:22px;text-align:center;font-size: 11px;cursor:pointer;
     
     // Afficher le compteur avec animation
     liveCounter.classList.add('visible');
+    
+    console.log('Compteur mis à jour:', liveCounter.textContent, 'classes:', liveCounter.className);
   }
 
   function hideLiveCounter() {
@@ -3452,35 +3465,21 @@ border:0;line-height:22px;text-align:center;font-size: 11px;cursor:pointer;
   }
 
   function handleLiveCounterInput(event) {
-    if (IS_GMAIL || IS_OUTLOOK) {
-      console.log('Compteur live ignoré pour Gmail/Outlook');
-      return;
-    }
+    if (IS_GMAIL || IS_OUTLOOK) return;
     
     const element = event.target;
-    if (!element) {
-      console.log('Pas d\'élément cible');
-      return;
-    }
-    
-    console.log('Événement input détecté sur:', element);
+    if (!element) return;
     
     const genericSel = 'textarea, input[type="text"], input[type="search"], input[type="email"], input[type="url"], input[type="tel"], input:not([type]), [contenteditable=""], [contenteditable="true"]';
     const isEditable = element.matches && element.matches(genericSel);
     const isInEditable = element.closest && element.closest(genericSel);
     
-    if (!isEditable && !isInEditable) {
-      console.log('Élément non éditable');
-      return;
-    }
+    if (!isEditable && !isInEditable) return;
     
     const targetElement = isEditable ? element : element.closest(genericSel);
-    if (!targetElement) {
-      console.log('Pas d\'élément éditable trouvé');
-      return;
-    }
+    if (!targetElement) return;
     
-    console.log('Élément éditable trouvé:', targetElement);
+    console.log('INPUT détecté sur:', targetElement);
     currentActiveElement = targetElement;
     createLiveCounter();
     
@@ -3491,16 +3490,15 @@ border:0;line-height:22px;text-align:center;font-size: 11px;cursor:pointer;
     liveCounterTimeout = setTimeout(() => {
       try {
         const text = targetElement.value || targetElement.textContent || '';
-        console.log('Texte à analyser:', text);
         const errorCount = countErrorsInText(text);
-        console.log('Nombre d\'erreurs:', errorCount);
+        console.log('Mise à jour compteur:', errorCount, 'erreurs');
         updateLiveCounterText(errorCount);
         updateLiveCounterPosition(targetElement);
       } catch (e) {
         console.error('Erreur dans handleLiveCounterInput:', e);
         hideLiveCounter();
       }
-    }, 300);
+    }, 200);
   }
 
   function handleLiveCounterFocus(event) {
@@ -3542,6 +3540,7 @@ border:0;line-height:22px;text-align:center;font-size: 11px;cursor:pointer;
     try {
       console.log('Ajout des event listeners pour le compteur live');
       document.addEventListener('input', handleLiveCounterInput, true);
+      document.addEventListener('keyup', handleLiveCounterInput, true);
       document.addEventListener('focusin', handleLiveCounterFocus, true);
       document.addEventListener('focusout', handleLiveCounterBlur, true);
       document.addEventListener('selectionchange', () => {
