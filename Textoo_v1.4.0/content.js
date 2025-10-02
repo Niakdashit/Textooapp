@@ -3338,16 +3338,19 @@ border:0;line-height:22px;text-align:center;font-size: 11px;cursor:pointer;
       x -= 12; // Décalage négatif très important - encore plus proche du texte
       y += lineHeight / 2 - 7; // Centrer verticalement (7 = moitié de la hauteur du compteur)
       
-      // S'assurer que le compteur reste visible
+      // S'assurer que le compteur reste visible avec des marges plus grandes
       const counterSize = 14;
-      const margin = 10;
+      const margin = 20; // Marge augmentée pour éviter les bords
       
+      // Vérifier les limites horizontales
       if (x + counterSize + margin > window.innerWidth) {
         x = window.innerWidth - counterSize - margin;
       }
       if (x < margin) {
         x = margin;
       }
+      
+      // Vérifier les limites verticales
       if (y + counterSize + margin > window.innerHeight) {
         y = window.innerHeight - counterSize - margin;
       }
@@ -3355,8 +3358,17 @@ border:0;line-height:22px;text-align:center;font-size: 11px;cursor:pointer;
         y = margin;
       }
       
+      // Appliquer la position avec transition fluide pour éviter les téléportations
+      liveCounter.style.transition = 'left 0.1s ease-out, top 0.1s ease-out';
       liveCounter.style.left = x + 'px';
       liveCounter.style.top = y + 'px';
+      
+      // Supprimer la transition après un court délai pour les mises à jour rapides
+      setTimeout(() => {
+        if (liveCounter) {
+          liveCounter.style.transition = '';
+        }
+      }, 100);
       
       console.log('Position du compteur à la fin du texte:', x, y, 'longueur:', text.length);
     } catch (e) {
@@ -3528,6 +3540,9 @@ border:0;line-height:22px;text-align:center;font-size: 11px;cursor:pointer;
       clearTimeout(liveCounterTimeout);
     }
     
+    // Mettre à jour la position immédiatement pour un suivi fluide
+    updateLiveCounterPosition(targetElement);
+    
     liveCounterTimeout = setTimeout(() => {
       try {
         const text = targetElement.value || targetElement.textContent || '';
@@ -3535,11 +3550,17 @@ border:0;line-height:22px;text-align:center;font-size: 11px;cursor:pointer;
         console.log('Mise à jour compteur:', errorCount, 'erreurs');
         updateLiveCounterText(errorCount);
         updateLiveCounterPosition(targetElement);
+        
+        // S'assurer que le compteur reste visible
+        if (liveCounter && currentActiveElement) {
+          liveCounter.style.opacity = '1';
+          liveCounter.style.transform = 'scale(1)';
+        }
       } catch (e) {
         console.error('Erreur dans handleLiveCounterInput:', e);
         hideLiveCounter();
       }
-    }, 200);
+    }, 100); // Délai réduit pour plus de réactivité
   }
 
   function handleLiveCounterFocus(event) {

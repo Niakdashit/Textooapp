@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Compteur Live - Tous Scénarios</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #1a1a1a;
+            color: #fff;
+        }
+        .test-section {
+            margin: 30px 0;
+            padding: 20px;
+            border: 1px solid #333;
+            border-radius: 8px;
+        }
+        .test-title {
+            color: #4CAF50;
+            font-size: 18px;
+            margin-bottom: 15px;
+        }
+        textarea, input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            background: #333;
+            color: #fff;
+            border: 1px solid #555;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .contenteditable {
+            width: 100%;
+            min-height: 60px;
+            padding: 10px;
+            margin: 10px 0;
+            background: #333;
+            color: #fff;
+            border: 1px solid #555;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .instructions {
+            background: #2a2a2a;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 10px 0;
+            font-size: 14px;
+        }
+        .scenario {
+            background: #3a3a3a;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            border-left: 4px solid #4CAF50;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Tests Complets du Compteur Live</h1>
+    
+    <div class="test-section">
+        <div class="test-title">📝 Test 1: Textarea Simple</div>
+        <div class="instructions">
+            <strong>Instructions:</strong> Tapez du texte avec des erreurs. Le compteur doit apparaître à droite et suivre le texte.
+        </div>
+        <textarea placeholder="Tapez ici: 'j'ai manger des poulet a la maison'"></textarea>
+        <div class="scenario">✅ Le compteur doit apparaître à droite du texte</div>
+        <div class="scenario">✅ Il doit se déplacer en même temps que le texte</div>
+        <div class="scenario">✅ Pas de disparition ou téléportation</div>
+    </div>
+
+    <div class="test-section">
+        <div class="test-title">🔤 Test 2: Input Field</div>
+        <div class="instructions">
+            <strong>Instructions:</strong> Tapez dans le champ de saisie. Testez la vitesse de frappe.
+        </div>
+        <input type="text" placeholder="Tapez rapidement: 'c'est etais un erreur'">
+        <div class="scenario">✅ Suivi fluide même en tapant vite</div>
+        <div class="scenario">✅ Position stable</div>
+    </div>
+
+    <div class="test-section">
+        <div class="test-title">✏️ Test 3: Contenteditable</div>
+        <div class="instructions">
+            <strong>Instructions:</strong> Éditez le texte ci-dessous. Testez l'édition au milieu du texte.
+        </div>
+        <div class="contenteditable" contenteditable="true">
+            Texte initial avec des erreur
+        </div>
+        <div class="scenario">✅ Le compteur reste à la fin même si on édite au milieu</div>
+        <div class="scenario">✅ Pas de saut de position</div>
+    </div>
+
+    <div class="test-section">
+        <div class="test-title">🎯 Test 4: Sélection de Texte</div>
+        <div class="instructions">
+            <strong>Instructions:</strong> Sélectionnez du texte dans le champ ci-dessous.
+        </div>
+        <textarea placeholder="Tapez du texte puis sélectionnez-le">j'ai manger des poulet a la maison de mon pere</textarea>
+        <div class="scenario">✅ Le compteur reste à la fin même si on sélectionne</div>
+        <div class="scenario">✅ Pas de déplacement lors de la sélection</div>
+    </div>
+
+    <div class="test-section">
+        <div class="test-title">📱 Test 5: Copier/Coller</div>
+        <div class="instructions">
+            <strong>Instructions:</strong> Copiez du texte et collez-le dans le champ.
+        </div>
+        <textarea placeholder="Collez du texte ici ou copiez depuis ce champ"></textarea>
+        <div class="scenario">✅ Le compteur se repositionne correctement après collage</div>
+        <div class="scenario">✅ Comptage correct après collage</div>
+    </div>
+
+    <div class="test-section">
+        <div class="test-title">⌨️ Test 6: Touches Spéciales</div>
+        <div class="instructions">
+            <strong>Instructions:</strong> Testez les touches Backspace, Delete, Flèches, Entrée.
+        </div>
+        <textarea placeholder="Testez: Backspace, Delete, Flèches, Entrée"></textarea>
+        <div class="scenario">✅ Le compteur suit les suppressions</div>
+        <div class="scenario">✅ Position correcte après Entrée</div>
+        <div class="scenario">✅ Pas de téléportation</div>
+    </div>
+
+    <div class="test-section">
+        <div class="test-title">🔄 Test 7: Focus/Blur</div>
+        <div class="instructions">
+            <strong>Instructions:</strong> Cliquez dans et hors des champs.
+        </div>
+        <textarea placeholder="Cliquez dans ce champ puis hors du champ"></textarea>
+        <input type="text" placeholder="Puis dans ce champ">
+        <div class="scenario">✅ Le compteur apparaît/disparaît correctement</div>
+        <div class="scenario">✅ Pas de compteur fantôme</div>
+    </div>
+
+    <div class="test-section">
+        <div class="test-title">📊 Test 8: Différentes Erreurs</div>
+        <div class="instructions">
+            <strong>Instructions:</strong> Tapez différentes phrases avec erreurs pour tester le comptage.
+        </div>
+        <textarea placeholder="Testez ces phrases:&#10;1. 'j'ai manger' (devrait être 1 erreur)&#10;2. 'j'ai manger des poulet a la maison' (devrait être 5 erreurs)&#10;3. 'c'est etais un erreur' (devrait être 2 erreurs)"></textarea>
+        <div class="scenario">✅ Comptage précis des erreurs</div>
+        <div class="scenario">✅ Couleurs correctes (vert=0, rouge=1+)</div>
+    </div>
+
+    <div class="test-section">
+        <div class="test-title">🖱️ Test 9: Scroll et Redimensionnement</div>
+        <div class="instructions">
+            <strong>Instructions:</strong> Faites défiler la page et redimensionnez la fenêtre.
+        </div>
+        <textarea placeholder="Faites défiler et redimensionnez la fenêtre"></textarea>
+        <div class="scenario">✅ Le compteur reste visible lors du scroll</div>
+        <div class="scenario">✅ Position correcte après redimensionnement</div>
+    </div>
+
+    <div class="test-section">
+        <div class="test-title">⚡ Test 10: Performance</div>
+        <div class="instructions">
+            <strong>Instructions:</strong> Tapez très rapidement du texte long.
+        </div>
+        <textarea placeholder="Tapez très rapidement du texte long pour tester les performances"></textarea>
+        <div class="scenario">✅ Pas de lag ou de saccades</div>
+        <div class="scenario">✅ Suivi fluide même en tapant vite</div>
+        <div class="scenario">✅ Pas de perte de position</div>
+    </div>
+
+    <div class="instructions">
+        <h3>🎯 Checklist de Validation:</h3>
+        <ul>
+            <li>✅ Le compteur apparaît à droite du texte</li>
+            <li>✅ Il suit le texte en temps réel sans téléportation</li>
+            <li>✅ Il reste visible dans toutes les situations</li>
+            <li>✅ Pas de disparition intempestive</li>
+            <li>✅ Position stable lors des sélections</li>
+            <li>✅ Comptage correct des erreurs</li>
+            <li>✅ Couleurs appropriées (vert/rouge)</li>
+            <li>✅ Performance fluide</li>
+            <li>✅ Design identique à Gmail/Outlook</li>
+        </ul>
+    </div>
+
+    <script>
+        // Logs pour debugging
+        console.log('🧪 Page de test chargée - Prêt pour les tests du compteur live');
+        
+        // Écouter les événements pour debugging
+        document.addEventListener('input', (e) => {
+            console.log('📝 Input détecté:', e.target.tagName, e.target.value.length);
+        });
+        
+        document.addEventListener('selectionchange', () => {
+            console.log('🎯 Sélection changée');
+        });
+    </script>
+</body>
+</html>
