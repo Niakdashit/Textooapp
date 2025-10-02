@@ -3334,6 +3334,9 @@ border:0;line-height:22px;text-align:center;font-size: 11px;cursor:pointer;
         const availableWidth = rect.width - 30; // Marge pour le compteur
         const textWidth = Math.min(text.length * charWidth, availableWidth);
         x += textWidth;
+      } else {
+        // Si le texte est vide, positionner au début
+        x = rect.left;
       }
       
       // Positionner le compteur juste à droite de la fin du texte
@@ -3437,9 +3440,9 @@ border:0;line-height:22px;text-align:center;font-size: 11px;cursor:pointer;
     
     let count = 0;
     
-    // Détection complète des erreurs courantes
+    // Détection précise des erreurs courantes
     const allErrors = [
-      // Erreurs de conjugaison - détection individuelle
+      // Erreurs de conjugaison - patterns spécifiques
       { pattern: /j'ai\s+manger\b/gi, name: "j'ai manger" },
       { pattern: /j'ai\s+etre\b/gi, name: "j'ai être" },
       { pattern: /j'ai\s+avoir\b/gi, name: "j'ai avoir" },
@@ -3450,19 +3453,16 @@ border:0;line-height:22px;text-align:center;font-size: 11px;cursor:pointer;
       { pattern: /j'ai\s+savoir\b/gi, name: "j'ai savoir" },
       { pattern: /j'ai\s+prendre\b/gi, name: "j'ai prendre" },
       
-      // Erreurs d'articles - détection individuelle
-      { pattern: /\bdes\b/gi, name: "des (article)" },
-      { pattern: /\bdes\s+(?:poulet|poisson|chat|chien)\b/gi, name: "des + animal" },
-      { pattern: /\bdes\s+(?:maison|voiture|livre)\b/gi, name: "des + objet" },
+      // Erreurs d'articles - plus spécifiques
+      { pattern: /\bdes\s+(?:poulet|poisson|chat|chien|maison|voiture|livre)\b/gi, name: "des + nom" },
       
-      // Erreurs de prépositions - détection individuelle
-      { pattern: /\ba\b/gi, name: "à (préposition)" },
-      { pattern: /\ba\s+(?:la|le|les)\b/gi, name: "à la/le/les" },
-      { pattern: /\ba\s+(?:maison|école|travail)\b/gi, name: "à + lieu" },
+      // Erreurs de prépositions - plus spécifiques
+      { pattern: /\ba\s+(?:la|le|les|maison|école|travail)\b/gi, name: "à + article/lieu" },
       
-      // Erreurs de mots - détection individuelle
-      { pattern: /\bmanger\b/gi, name: "manger (infinitif)" },
-      { pattern: /\bpoulet\b/gi, name: "poulet" },
+      // Erreurs de mots spécifiques
+      { pattern: /\bappler\b/gi, name: "appler (devrait être appeler)" },
+      { pattern: /\barriver\s+a\b/gi, name: "arriver à" },
+      { pattern: /\bmais\s+pourquoi\b/gi, name: "mais pourquoi" },
       
       // Erreurs spécifiques
       { pattern: /c'est\s+etais\b/gi, name: "c'est etais" },
@@ -3542,15 +3542,14 @@ border:0;line-height:22px;text-align:center;font-size: 11px;cursor:pointer;
       clearTimeout(liveCounterTimeout);
     }
     
-    // Mettre à jour la position immédiatement pour un suivi fluide
-    updateLiveCounterPosition(targetElement);
-    
     // Mise à jour immédiate du compteur pour le temps réel
     try {
       const text = targetElement.value || targetElement.textContent || '';
       const errorCount = countErrorsInText(text);
-      console.log('Mise à jour immédiate compteur:', errorCount, 'erreurs');
+      console.log('Mise à jour immédiate compteur:', errorCount, 'erreurs, texte:', text.length, 'caractères');
       updateLiveCounterText(errorCount);
+      
+      // Recalculer la position à chaque fois pour suivre les suppressions
       updateLiveCounterPosition(targetElement);
       
       // S'assurer que le compteur reste visible
@@ -3672,6 +3671,7 @@ border:0;line-height:22px;text-align:center;font-size: 11px;cursor:pointer;
       console.log('Ajout des event listeners pour le compteur live');
       document.addEventListener('input', handleLiveCounterInput, true);
       document.addEventListener('keyup', handleLiveCounterInput, true);
+      document.addEventListener('keydown', handleLiveCounterInput, true);
       document.addEventListener('focusin', handleLiveCounterFocus, true);
       document.addEventListener('focusout', handleLiveCounterBlur, true);
       document.addEventListener('selectionchange', () => {
