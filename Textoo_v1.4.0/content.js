@@ -3422,30 +3422,9 @@ border:0;line-height:22px;text-align:center;font-size: 11px;cursor:pointer;
   function countErrorsInText(text) {
     if (!text || text.trim().length < 2) return 0;
     
-    // Détection simplifiée et robuste
     let count = 0;
     
-    // Erreurs courantes avec regex
-    const commonErrors = [
-      { pattern: /j'ai\s+manger\b/gi, name: "avoir+manger" },
-      { pattern: /c'est\s+etais\b/gi, name: "c'est etais" },
-      { pattern: /c'est\s+etait\b/gi, name: "c'est etait" },
-      { pattern: /\bet\s+est\b/gi, name: "et est" },
-      { pattern: /\bon\s+ont\b/gi, name: "on ont" },
-      { pattern: /\bpulet\b/gi, name: "pulet" },
-      { pattern: /\bpoisson\b/gi, name: "poisson" },
-      { pattern: /\bpoison\b/gi, name: "poison" }
-    ];
-    
-    for (const error of commonErrors) {
-      const matches = text.match(error.pattern);
-      if (matches) {
-        count += matches.length;
-        console.log(`Erreur détectée: ${error.name} (${matches.length})`);
-      }
-    }
-    
-    // Essayer d'utiliser les fonctions avancées si disponibles
+    // Utiliser les fonctions avancées de Gmail/Outlook en priorité
     try {
       const idx = { text: text };
       
@@ -3478,6 +3457,26 @@ border:0;line-height:22px;text-align:center;font-size: 11px;cursor:pointer;
       
     } catch (e) {
       console.log('Erreur dans les fonctions avancées:', e);
+    }
+    
+    // Si aucune erreur détectée par les fonctions avancées, utiliser la détection basique
+    if (count === 0) {
+      const basicErrors = [
+        /j'ai\s+manger\b/gi,
+        /c'est\s+etais\b/gi,
+        /c'est\s+etait\b/gi,
+        /\bet\s+est\b/gi,
+        /\bon\s+ont\b/gi,
+        /\bpulet\b/gi
+      ];
+      
+      for (const pattern of basicErrors) {
+        const matches = text.match(pattern);
+        if (matches) {
+          count += matches.length;
+          console.log(`Erreur basique détectée: ${pattern} (${matches.length})`);
+        }
+      }
     }
     
     console.log(`Total d'erreurs détectées: ${count} pour le texte: "${text}"`);
