@@ -3450,90 +3450,48 @@ border:0;line-height:22px;text-align:center;font-size: 11px;cursor:pointer;
     if (!text || text.trim().length < 2) return 0;
     
     let count = 0;
+    console.log(`=== ANALYSE DU TEXTE: "${text}" ===`);
     
-    // Détection précise des erreurs courantes
-    const allErrors = [
-      // Erreurs de conjugaison - patterns spécifiques
-      { pattern: /j'ai\s+manger\b/gi, name: "j'ai manger" },
-      { pattern: /j'ai\s+etre\b/gi, name: "j'ai être" },
-      { pattern: /j'ai\s+avoir\b/gi, name: "j'ai avoir" },
-      { pattern: /j'ai\s+faire\b/gi, name: "j'ai faire" },
-      { pattern: /j'ai\s+aller\b/gi, name: "j'ai aller" },
-      { pattern: /j'ai\s+venir\b/gi, name: "j'ai venir" },
-      { pattern: /j'ai\s+voir\b/gi, name: "j'ai voir" },
-      { pattern: /j'ai\s+savoir\b/gi, name: "j'ai savoir" },
-      { pattern: /j'ai\s+prendre\b/gi, name: "j'ai prendre" },
-      
-      // Erreurs d'articles - plus spécifiques
-      { pattern: /\bdes\s+(?:poulet|poisson|chat|chien|maison|voiture|livre)\b/gi, name: "des + nom" },
-      
-      // Erreurs de prépositions - plus spécifiques
-      { pattern: /\ba\s+(?:la|le|les|maison|école|travail)\b/gi, name: "à + article/lieu" },
-      
-      // Erreurs de mots spécifiques
-      { pattern: /\bappler\b/gi, name: "appler (devrait être appeler)" },
-      { pattern: /\barriver\s+a\b/gi, name: "arriver à" },
-      { pattern: /\bmais\s+pourquoi\b/gi, name: "mais pourquoi" },
-      
-      // Erreurs spécifiques du texte de l'utilisateur
-      { pattern: /\bpoulets\b/gi, name: "poulets (devrait être poulets)" },
-      { pattern: /\bpere\b/gi, name: "pere (devrait être père)" },
-      { pattern: /\bpreparée\b/gi, name: "préparée (devrait être préparé)" },
-      { pattern: /\bpa\b/gi, name: "pa (devrait être pas)" },
-      { pattern: /\bgout\b/gi, name: "gout (devrait être goût)" },
-      
-      // Erreurs du nouveau texte
-      { pattern: /\bcomprend\b/gi, name: "comprend (devrait être comprends)" },
-      { pattern: /\bmangé\b/gi, name: "mangé (devrait être manger)" },
-      { pattern: /\bfraise\b/gi, name: "fraise (devrait être fraises)" },
-      
-      // Erreurs supplémentaires détectées dans l'image
-      { pattern: /\bmeme\b/gi, name: "meme (devrait être même)" },
-      { pattern: /\bmere\b/gi, name: "mere (devrait être mère)" },
-      
-      // Erreurs spécifiques
-      { pattern: /c'est\s+etais\b/gi, name: "c'est etais" },
-      { pattern: /c'est\s+etait\b/gi, name: "c'est etait" },
-      { pattern: /\bet\s+est\b/gi, name: "et est" },
-      { pattern: /\bon\s+ont\b/gi, name: "on ont" },
-      { pattern: /\bpulet\b/gi, name: "pulet" },
-      { pattern: /\bpoisson\b/gi, name: "poisson" },
-      { pattern: /\bpoison\b/gi, name: "poison" }
-    ];
-    
-    // Compter toutes les erreurs détectées
-    for (const error of allErrors) {
-      const matches = text.match(error.pattern);
-      if (matches) {
-        count += matches.length;
-        console.log(`Erreur détectée: ${error.name} (${matches.length})`);
+    // 1. UTILISER LE SYSTÈME EXISTANT DE L'EXTENSION EN PRIORITÉ
+    try {
+      if (typeof window.TextooOfflineRules !== 'undefined' && window.TextooOfflineRules.checkText) {
+        const offlineResults = window.TextooOfflineRules.checkText(text);
+        if (offlineResults && offlineResults.length > 0) {
+          count += offlineResults.length;
+          console.log(`Erreurs détectées par TextooOfflineRules: ${offlineResults.length}`);
+          offlineResults.forEach((result, index) => {
+            console.log(`  ${index + 1}. ${result.message || 'Erreur détectée'}`);
+          });
+        }
       }
+    } catch (e) {
+      console.log('Erreur TextooOfflineRules:', e);
     }
     
-    // Essayer d'utiliser les fonctions avancées en plus
+    // 2. UTILISER LES FONCTIONS AVANCÉES DE L'EXTENSION
     try {
       const idx = { text: text };
       
       if (typeof a_buildAvoirInfMatches2 === 'function') {
         const avoirMatches = a_buildAvoirInfMatches2(idx);
-        count += avoirMatches.length;
-        if (avoirMatches.length > 0) {
+        if (avoirMatches && avoirMatches.length > 0) {
+          count += avoirMatches.length;
           console.log(`Erreurs avoir+inf avancées: ${avoirMatches.length}`);
         }
       }
       
       if (typeof a_buildEtreInfMatches === 'function') {
         const etreMatches = a_buildEtreInfMatches(idx);
-        count += etreMatches.length;
-        if (etreMatches.length > 0) {
+        if (etreMatches && etreMatches.length > 0) {
+          count += etreMatches.length;
           console.log(`Erreurs être+inf avancées: ${etreMatches.length}`);
         }
       }
       
       if (typeof a_buildCTetaitMatches === 'function') {
         const ctetaitMatches = a_buildCTetaitMatches(idx);
-        count += ctetaitMatches.length;
-        if (ctetaitMatches.length > 0) {
+        if (ctetaitMatches && ctetaitMatches.length > 0) {
+          count += ctetaitMatches.length;
           console.log(`Erreurs c'est etais avancées: ${ctetaitMatches.length}`);
         }
       }
@@ -3542,7 +3500,54 @@ border:0;line-height:22px;text-align:center;font-size: 11px;cursor:pointer;
       console.log('Erreur dans les fonctions avancées:', e);
     }
     
-    console.log(`Total d'erreurs détectées: ${count} pour le texte: "${text}"`);
+    // 3. SI AUCUNE ERREUR DÉTECTÉE, UTILISER LES PATTERNS DE FALLBACK
+    if (count === 0) {
+      console.log('Aucune erreur détectée par le système principal, utilisation des patterns de fallback...');
+      
+      const fallbackErrors = [
+        // Erreurs de conjugaison courantes
+        { pattern: /j'ai\s+(manger|etre|avoir|faire|aller|venir|voir|savoir|prendre)\b/gi, name: "j'ai + infinitif" },
+        { pattern: /\b(je|tu|il|elle|nous|vous|ils|elles)\s+(manger|etre|avoir|faire|aller|venir|voir|savoir|prendre)\b/gi, name: "sujet + infinitif" },
+        
+        // Erreurs d'accord
+        { pattern: /\b(la|une)\s+(polices|maisons|voitures|chats|chiens|livres|semaines|mois|jours)\b/gi, name: "article singulier + nom pluriel" },
+        { pattern: /\b(le|un)\s+(polices|maisons|voitures|chats|chiens|livres|semaines|mois|jours)\b/gi, name: "article masculin + nom pluriel" },
+        
+        // Erreurs de participes passés
+        { pattern: /\bvenir\s+(nous|vous)\s+(cherché|mangé|bu|vu|pris|fait|dit|mis|vu|été)\b/gi, name: "venir nous + participe passé" },
+        { pattern: /\baller\s+(nous|vous)\s+(cherché|mangé|bu|vu|pris|fait|dit|mis|vu|été)\b/gi, name: "aller nous + participe passé" },
+        
+        // Erreurs d'accents manquants
+        { pattern: /\bpere\b/gi, name: "pere → père" },
+        { pattern: /\bmere\b/gi, name: "mere → mère" },
+        { pattern: /\bmeme\b/gi, name: "meme → même" },
+        { pattern: /\bgout\b/gi, name: "gout → goût" },
+        { pattern: /\bcomprend\b/gi, name: "comprend → comprends" },
+        
+        // Erreurs spécifiques du texte de l'utilisateur
+        { pattern: /\bpoulets\b/gi, name: "poulets (accord)" },
+        { pattern: /\bpreparée\b/gi, name: "préparée → préparé" },
+        { pattern: /\bpa\b/gi, name: "pa → pas" },
+        { pattern: /\bmangé\b/gi, name: "mangé → manger" },
+        { pattern: /\bfraise\b/gi, name: "fraise → fraises" },
+        
+        // Erreurs générales
+        { pattern: /\bappler\b/gi, name: "appler → appeler" },
+        { pattern: /c'est\s+(etais|etait)\b/gi, name: "c'est etais/etait" },
+        { pattern: /\bet\s+est\b/gi, name: "et est" },
+        { pattern: /\bon\s+ont\b/gi, name: "on ont" }
+      ];
+      
+      for (const error of fallbackErrors) {
+        const matches = text.match(error.pattern);
+        if (matches) {
+          count += matches.length;
+          console.log(`Erreur fallback détectée: ${error.name} (${matches.length})`);
+        }
+      }
+    }
+    
+    console.log(`=== TOTAL FINAL: ${count} erreurs détectées ===`);
     return count;
   }
 
