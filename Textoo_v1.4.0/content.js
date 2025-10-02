@@ -3426,7 +3426,7 @@ border:0;line-height:22px;text-align:center;font-size: 11px;cursor:pointer;
     
     // Détection complète des erreurs courantes
     const allErrors = [
-      // Erreurs de conjugaison
+      // Erreurs de conjugaison - détection individuelle
       { pattern: /j'ai\s+manger\b/gi, name: "j'ai manger" },
       { pattern: /j'ai\s+etre\b/gi, name: "j'ai être" },
       { pattern: /j'ai\s+avoir\b/gi, name: "j'ai avoir" },
@@ -3436,15 +3436,20 @@ border:0;line-height:22px;text-align:center;font-size: 11px;cursor:pointer;
       { pattern: /j'ai\s+voir\b/gi, name: "j'ai voir" },
       { pattern: /j'ai\s+savoir\b/gi, name: "j'ai savoir" },
       { pattern: /j'ai\s+prendre\b/gi, name: "j'ai prendre" },
-      { pattern: /j'ai\s+venir\b/gi, name: "j'ai venir" },
       
-      // Erreurs d'articles
+      // Erreurs d'articles - détection individuelle
+      { pattern: /\bdes\b/gi, name: "des (article)" },
       { pattern: /\bdes\s+(?:poulet|poisson|chat|chien)\b/gi, name: "des + animal" },
       { pattern: /\bdes\s+(?:maison|voiture|livre)\b/gi, name: "des + objet" },
       
-      // Erreurs de prépositions
+      // Erreurs de prépositions - détection individuelle
+      { pattern: /\ba\b/gi, name: "à (préposition)" },
       { pattern: /\ba\s+(?:la|le|les)\b/gi, name: "à la/le/les" },
       { pattern: /\ba\s+(?:maison|école|travail)\b/gi, name: "à + lieu" },
+      
+      // Erreurs de mots - détection individuelle
+      { pattern: /\bmanger\b/gi, name: "manger (infinitif)" },
+      { pattern: /\bpoulet\b/gi, name: "poulet" },
       
       // Erreurs spécifiques
       { pattern: /c'est\s+etais\b/gi, name: "c'est etais" },
