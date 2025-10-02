@@ -3327,15 +3327,34 @@ border:0;line-height:22px;text-align:center;font-size: 11px;cursor:pointer;
       let x = rect.left;
       let y = rect.top;
       
-      // TOUJOURS positionner à la position du curseur (caret)
-      const cursorPos = getCursorPosition(element);
-      if (cursorPos > 0) {
-        // Calculer la position du curseur
-        const textBeforeCursor = text.substring(0, cursorPos);
-        const textWidth = textBeforeCursor.length * charWidth;
-        x += Math.min(textWidth, rect.width - 30); // Marge pour le compteur
+      // TOUJOURS positionner à la fin du texte, même en cas de sélection
+      if (text.length > 0) {
+        // Utiliser la position réelle du curseur à la fin du texte
+        const cursorPos = getCursorPosition(element);
+        let actualPos = cursorPos;
+        
+        // Si le curseur n'est pas à la fin, forcer la position à la fin
+        if (cursorPos < text.length) {
+          actualPos = text.length;
+        }
+        
+        // Calculer la position basée sur la longueur réelle du texte
+        const textWidth = actualPos * charWidth;
+        const maxWidth = rect.width - 40; // Marge plus grande pour le compteur
+        
+        // Positionner exactement à la fin du texte visible
+        x += Math.min(textWidth, maxWidth);
+        
+        console.log('Position calculée:', {
+          textLength: text.length,
+          cursorPos: cursorPos,
+          actualPos: actualPos,
+          textWidth: textWidth,
+          maxWidth: maxWidth,
+          finalX: x
+        });
       } else {
-        // Si le curseur est au début, positionner au début
+        // Si le texte est vide, positionner au début
         x = rect.left;
       }
       
@@ -3675,10 +3694,8 @@ border:0;line-height:22px;text-align:center;font-size: 11px;cursor:pointer;
       document.addEventListener('focusin', handleLiveCounterFocus, true);
       document.addEventListener('focusout', handleLiveCounterBlur, true);
       document.addEventListener('selectionchange', () => {
-        // Repositionner le compteur selon la position du curseur
-        if (currentActiveElement && liveCounter) {
-          updateLiveCounterPosition(currentActiveElement);
-        }
+        // Ne pas repositionner le compteur lors des sélections
+        // Il doit rester à la fin du texte
       });
       window.addEventListener('scroll', () => {
         if (liveCounter && currentActiveElement) {
