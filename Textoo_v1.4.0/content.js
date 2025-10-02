@@ -3482,6 +3482,11 @@ border:0;line-height:22px;text-align:center;font-size: 11px;cursor:pointer;
       { pattern: /\bpa\b/gi, name: "pa (devrait être pas)" },
       { pattern: /\bgout\b/gi, name: "gout (devrait être goût)" },
       
+      // Erreurs du nouveau texte
+      { pattern: /\bcomprend\b/gi, name: "comprend (devrait être comprends)" },
+      { pattern: /\bmangé\b/gi, name: "mangé (devrait être manger)" },
+      { pattern: /\bfraise\b/gi, name: "fraise (devrait être fraises)" },
+      
       // Erreurs spécifiques
       { pattern: /c'est\s+etais\b/gi, name: "c'est etais" },
       { pattern: /c'est\s+etait\b/gi, name: "c'est etait" },
