@@ -3424,59 +3424,77 @@ border:0;line-height:22px;text-align:center;font-size: 11px;cursor:pointer;
     
     let count = 0;
     
-    // Utiliser les fonctions avancées de Gmail/Outlook en priorité
+    // Détection complète des erreurs courantes
+    const allErrors = [
+      // Erreurs de conjugaison
+      { pattern: /j'ai\s+manger\b/gi, name: "j'ai manger" },
+      { pattern: /j'ai\s+etre\b/gi, name: "j'ai être" },
+      { pattern: /j'ai\s+avoir\b/gi, name: "j'ai avoir" },
+      { pattern: /j'ai\s+faire\b/gi, name: "j'ai faire" },
+      { pattern: /j'ai\s+aller\b/gi, name: "j'ai aller" },
+      { pattern: /j'ai\s+venir\b/gi, name: "j'ai venir" },
+      { pattern: /j'ai\s+voir\b/gi, name: "j'ai voir" },
+      { pattern: /j'ai\s+savoir\b/gi, name: "j'ai savoir" },
+      { pattern: /j'ai\s+prendre\b/gi, name: "j'ai prendre" },
+      { pattern: /j'ai\s+venir\b/gi, name: "j'ai venir" },
+      
+      // Erreurs d'articles
+      { pattern: /\bdes\s+(?:poulet|poisson|chat|chien)\b/gi, name: "des + animal" },
+      { pattern: /\bdes\s+(?:maison|voiture|livre)\b/gi, name: "des + objet" },
+      
+      // Erreurs de prépositions
+      { pattern: /\ba\s+(?:la|le|les)\b/gi, name: "à la/le/les" },
+      { pattern: /\ba\s+(?:maison|école|travail)\b/gi, name: "à + lieu" },
+      
+      // Erreurs spécifiques
+      { pattern: /c'est\s+etais\b/gi, name: "c'est etais" },
+      { pattern: /c'est\s+etait\b/gi, name: "c'est etait" },
+      { pattern: /\bet\s+est\b/gi, name: "et est" },
+      { pattern: /\bon\s+ont\b/gi, name: "on ont" },
+      { pattern: /\bpulet\b/gi, name: "pulet" },
+      { pattern: /\bpoisson\b/gi, name: "poisson" },
+      { pattern: /\bpoison\b/gi, name: "poison" }
+    ];
+    
+    // Compter toutes les erreurs détectées
+    for (const error of allErrors) {
+      const matches = text.match(error.pattern);
+      if (matches) {
+        count += matches.length;
+        console.log(`Erreur détectée: ${error.name} (${matches.length})`);
+      }
+    }
+    
+    // Essayer d'utiliser les fonctions avancées en plus
     try {
       const idx = { text: text };
       
-      // Détecter les erreurs "avoir + infinitif" -> participe passé
       if (typeof a_buildAvoirInfMatches2 === 'function') {
         const avoirMatches = a_buildAvoirInfMatches2(idx);
         count += avoirMatches.length;
         if (avoirMatches.length > 0) {
-          console.log(`Erreurs avoir+inf: ${avoirMatches.length}`);
+          console.log(`Erreurs avoir+inf avancées: ${avoirMatches.length}`);
         }
       }
       
-      // Détecter les erreurs "être + infinitif" -> participe passé
       if (typeof a_buildEtreInfMatches === 'function') {
         const etreMatches = a_buildEtreInfMatches(idx);
         count += etreMatches.length;
         if (etreMatches.length > 0) {
-          console.log(`Erreurs être+inf: ${etreMatches.length}`);
+          console.log(`Erreurs être+inf avancées: ${etreMatches.length}`);
         }
       }
       
-      // Détecter "c'est etais" -> "c'était"
       if (typeof a_buildCTetaitMatches === 'function') {
         const ctetaitMatches = a_buildCTetaitMatches(idx);
         count += ctetaitMatches.length;
         if (ctetaitMatches.length > 0) {
-          console.log(`Erreurs c'est etais: ${ctetaitMatches.length}`);
+          console.log(`Erreurs c'est etais avancées: ${ctetaitMatches.length}`);
         }
       }
       
     } catch (e) {
       console.log('Erreur dans les fonctions avancées:', e);
-    }
-    
-    // Si aucune erreur détectée par les fonctions avancées, utiliser la détection basique
-    if (count === 0) {
-      const basicErrors = [
-        /j'ai\s+manger\b/gi,
-        /c'est\s+etais\b/gi,
-        /c'est\s+etait\b/gi,
-        /\bet\s+est\b/gi,
-        /\bon\s+ont\b/gi,
-        /\bpulet\b/gi
-      ];
-      
-      for (const pattern of basicErrors) {
-        const matches = text.match(pattern);
-        if (matches) {
-          count += matches.length;
-          console.log(`Erreur basique détectée: ${pattern} (${matches.length})`);
-        }
-      }
     }
     
     console.log(`Total d'erreurs détectées: ${count} pour le texte: "${text}"`);
