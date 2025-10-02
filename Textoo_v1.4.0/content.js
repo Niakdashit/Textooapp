@@ -3329,9 +3329,11 @@ border:0;line-height:22px;text-align:center;font-size: 11px;cursor:pointer;
       
       // TOUJOURS positionner à la fin du texte, même en cas de sélection
       if (text.length > 0) {
-        // Calculer la position de la fin du texte
-        const textWidth = text.length * charWidth;
-        x += Math.min(textWidth, rect.width - 20);
+        // Calculer la position de la fin du texte de manière plus précise
+        // Utiliser la largeur réelle de l'élément moins une marge pour le compteur
+        const availableWidth = rect.width - 30; // Marge pour le compteur
+        const textWidth = Math.min(text.length * charWidth, availableWidth);
+        x += textWidth;
       }
       
       // Positionner le compteur juste à droite de la fin du texte
@@ -3543,24 +3545,37 @@ border:0;line-height:22px;text-align:center;font-size: 11px;cursor:pointer;
     // Mettre à jour la position immédiatement pour un suivi fluide
     updateLiveCounterPosition(targetElement);
     
+    // Mise à jour immédiate du compteur pour le temps réel
+    try {
+      const text = targetElement.value || targetElement.textContent || '';
+      const errorCount = countErrorsInText(text);
+      console.log('Mise à jour immédiate compteur:', errorCount, 'erreurs');
+      updateLiveCounterText(errorCount);
+      updateLiveCounterPosition(targetElement);
+      
+      // S'assurer que le compteur reste visible
+      if (liveCounter && currentActiveElement) {
+        liveCounter.style.opacity = '1';
+        liveCounter.style.transform = 'scale(1)';
+        liveCounter.style.display = 'flex';
+      }
+    } catch (e) {
+      console.error('Erreur dans handleLiveCounterInput immédiat:', e);
+    }
+    
+    // Mise à jour de confirmation avec délai très court
     liveCounterTimeout = setTimeout(() => {
       try {
         const text = targetElement.value || targetElement.textContent || '';
         const errorCount = countErrorsInText(text);
-        console.log('Mise à jour compteur:', errorCount, 'erreurs');
+        console.log('Mise à jour confirmation compteur:', errorCount, 'erreurs');
         updateLiveCounterText(errorCount);
         updateLiveCounterPosition(targetElement);
-        
-        // S'assurer que le compteur reste visible
-        if (liveCounter && currentActiveElement) {
-          liveCounter.style.opacity = '1';
-          liveCounter.style.transform = 'scale(1)';
-        }
       } catch (e) {
-        console.error('Erreur dans handleLiveCounterInput:', e);
+        console.error('Erreur dans handleLiveCounterInput confirmation:', e);
         hideLiveCounter();
       }
-    }, 100); // Délai réduit pour plus de réactivité
+    }, 50); // Délai très court pour confirmation
   }
 
   function handleLiveCounterFocus(event) {
@@ -3584,6 +3599,51 @@ border:0;line-height:22px;text-align:center;font-size: 11px;cursor:pointer;
   function handleLiveCounterBlur(event) {
     setTimeout(() => {
       if (currentActiveElement !== document.activeElement) {
+        hideLiveCounter();
+        currentActiveElement = null;
+      }
+    }, 100);
+  }
+
+  function handleLiveCounterFocus(event) {
+    if (IS_GMAIL || IS_OUTLOOK) return;
+    const element = event.target;
+    
+    const genericSel = 'textarea, input[type="text"], input[type="search"], input[type="email"], input[type="url"], input[type="tel"], input:not([type]), [contenteditable=""], [contenteditable="true"]';
+    const isEditable = element.matches && element.matches(genericSel);
+    const isInEditable = element.closest && element.closest(genericSel);
+    
+    if (!isEditable && !isInEditable) return;
+    
+    const targetElement = isEditable ? element : element.closest(genericSel);
+    if (!targetElement) return;
+    
+    console.log('FOCUS détecté sur:', targetElement);
+    currentActiveElement = targetElement;
+    createLiveCounter();
+    
+    // Mettre à jour immédiatement et s'assurer que le compteur est visible
+    const text = targetElement.value || targetElement.textContent || '';
+    const errorCount = countErrorsInText(text);
+    updateLiveCounterText(errorCount);
+    updateLiveCounterPosition(targetElement);
+    
+    // Forcer la visibilité du compteur
+    if (liveCounter) {
+      liveCounter.style.opacity = '1';
+      liveCounter.style.transform = 'scale(1)';
+      liveCounter.style.display = 'flex';
+      console.log('Compteur forcé à être visible au focus');
+    }
+  }
+
+  function handleLiveCounterBlur(event) {
+    if (IS_GMAIL || IS_OUTLOOK) return;
+    
+    // Délai avant de masquer pour permettre les clics sur le compteur
+    setTimeout(() => {
+      if (currentActiveElement && !currentActiveElement.contains(document.activeElement)) {
+        console.log('BLUR détecté, masquage du compteur');
         hideLiveCounter();
         currentActiveElement = null;
       }
