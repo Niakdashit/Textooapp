@@ -3334,9 +3334,9 @@ border:0;line-height:22px;text-align:center;font-size: 11px;cursor:pointer;
         x += Math.min(textWidth, rect.width - 20);
       }
       
-      // Positionner le compteur juste à droite de la fin du texte
+      // Positionner le compteur juste au-dessus de la dernière lettre
       x -= 2; // Décalage négatif - légèrement superposé au texte
-      y += lineHeight / 2 - 7; // Centrer verticalement (7 = moitié de la hauteur du compteur)
+      y -= 10; // Positionner au-dessus du texte (au lieu de centrer verticalement)
       
       // S'assurer que le compteur reste visible
       const counterSize = 14;
