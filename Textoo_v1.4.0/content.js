@@ -3487,6 +3487,10 @@ border:0;line-height:22px;text-align:center;font-size: 11px;cursor:pointer;
       { pattern: /\bmangé\b/gi, name: "mangé (devrait être manger)" },
       { pattern: /\bfraise\b/gi, name: "fraise (devrait être fraises)" },
       
+      // Erreurs supplémentaires détectées dans l'image
+      { pattern: /\bmeme\b/gi, name: "meme (devrait être même)" },
+      { pattern: /\bmere\b/gi, name: "mere (devrait être mère)" },
+      
       // Erreurs spécifiques
       { pattern: /c'est\s+etais\b/gi, name: "c'est etais" },
       { pattern: /c'est\s+etait\b/gi, name: "c'est etait" },
