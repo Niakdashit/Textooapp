@@ -3329,29 +3329,21 @@ border:0;line-height:22px;text-align:center;font-size: 11px;cursor:pointer;
       
       // TOUJOURS positionner à la fin du texte, même en cas de sélection
       if (text.length > 0) {
-        // Utiliser la position réelle du curseur à la fin du texte
-        const cursorPos = getCursorPosition(element);
-        let actualPos = cursorPos;
+        // Utiliser une approche plus simple et stable
+        // Positionner le compteur à la fin de l'élément moins une marge fixe
+        const elementWidth = rect.width;
+        const counterWidth = 20; // Largeur approximative du compteur + marge
+        const textEndPosition = elementWidth - counterWidth;
         
-        // Si le curseur n'est pas à la fin, forcer la position à la fin
-        if (cursorPos < text.length) {
-          actualPos = text.length;
-        }
-        
-        // Calculer la position basée sur la longueur réelle du texte
-        const textWidth = actualPos * charWidth;
-        const maxWidth = rect.width - 40; // Marge plus grande pour le compteur
-        
-        // Positionner exactement à la fin du texte visible
-        x += Math.min(textWidth, maxWidth);
+        // Positionner à la fin de l'élément
+        x = rect.right - counterWidth;
         
         console.log('Position calculée:', {
           textLength: text.length,
-          cursorPos: cursorPos,
-          actualPos: actualPos,
-          textWidth: textWidth,
-          maxWidth: maxWidth,
-          finalX: x
+          elementWidth: elementWidth,
+          textEndPosition: textEndPosition,
+          finalX: x,
+          rectRight: rect.right
         });
       } else {
         // Si le texte est vide, positionner au début
@@ -3482,6 +3474,13 @@ border:0;line-height:22px;text-align:center;font-size: 11px;cursor:pointer;
       { pattern: /\bappler\b/gi, name: "appler (devrait être appeler)" },
       { pattern: /\barriver\s+a\b/gi, name: "arriver à" },
       { pattern: /\bmais\s+pourquoi\b/gi, name: "mais pourquoi" },
+      
+      // Erreurs spécifiques du texte de l'utilisateur
+      { pattern: /\bpoulets\b/gi, name: "poulets (devrait être poulets)" },
+      { pattern: /\bpere\b/gi, name: "pere (devrait être père)" },
+      { pattern: /\bpreparée\b/gi, name: "préparée (devrait être préparé)" },
+      { pattern: /\bpa\b/gi, name: "pa (devrait être pas)" },
+      { pattern: /\bgout\b/gi, name: "gout (devrait être goût)" },
       
       // Erreurs spécifiques
       { pattern: /c'est\s+etais\b/gi, name: "c'est etais" },
