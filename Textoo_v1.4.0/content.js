@@ -3509,6 +3509,9 @@ border:0;line-height:22px;text-align:center;font-size: 11px;cursor:pointer;
         { pattern: /j'ai\s+(manger|etre|avoir|faire|aller|venir|voir|savoir|prendre)\b/gi, name: "j'ai + infinitif" },
         { pattern: /\b(je|tu|il|elle|nous|vous|ils|elles)\s+(manger|etre|avoir|faire|aller|venir|voir|savoir|prendre)\b/gi, name: "sujet + infinitif" },
         
+        // Erreurs après "pouvoir"
+        { pattern: /\bpouvoir\s+(mangé|bu|vu|pris|fait|dit|mis|été)\b/gi, name: "pouvoir + participe passé" },
+        
         // Erreurs d'accord - patterns plus robustes
         { pattern: /\b(la|une)\s+(polices|maisons|voitures|chats|chiens|livres|semaines|mois|jours)\b/gi, name: "article singulier + nom pluriel" },
         { pattern: /\b(le|un)\s+(polices|maisons|voitures|chats|chiens|livres|semaines|mois|jours)\b/gi, name: "article masculin + nom pluriel" },
@@ -3530,6 +3533,9 @@ border:0;line-height:22px;text-align:center;font-size: 11px;cursor:pointer;
         { pattern: /\bmeme\b/gi, name: "meme → même" },
         { pattern: /\bgout\b/gi, name: "gout → goût" },
         { pattern: /\bcomprend\b/gi, name: "comprend → comprends" },
+        
+        // Erreur "a" → "à" (préposition sans accent)
+        { pattern: /\ba\s+la\b/gi, name: "a la → à la" },
         
         // Erreurs spécifiques du texte de l'utilisateur
         { pattern: /\bpoulets\b/gi, name: "poulets (accord)" },
