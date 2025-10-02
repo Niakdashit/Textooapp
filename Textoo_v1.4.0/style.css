@@ -1,17 +1,48 @@
 
 .textoo-overlay{position:absolute;pointer-events:none;white-space:pre-wrap;word-wrap:break-word;overflow:hidden;color:transparent;z-index:2147483646}
-.textoo-overlay .textoo-highlight{color:transparent;text-decoration-line:underline;text-decoration-style:solid;text-decoration-color:#e53935;text-decoration-thickness:2px;text-underline-offset:2px;pointer-events:auto;position:relative}
+/* Couleur d'erreur personnalisable via --textoo-error */
+:root{ --textoo-error: #d81b60; }
+.textoo-overlay .textoo-highlight{color:transparent;text-decoration-line:underline;text-decoration-style:solid;text-decoration-color:var(--textoo-error,#d81b60);text-decoration-thickness:2px;text-underline-offset:2px;pointer-events:auto;position:relative}
 .textoo-overlay .textoo-highlight.style{ text-decoration-color:#1e88e5 }
 .textoo-overlay .textoo-highlight.typography{ text-decoration-color:#6a1b9a }
 .textoo-overlay .textoo-highlight.ambiguity{ text-decoration-color:#fb8c00 }
 .textoo-marker{pointer-events:auto;cursor:pointer}
 .textoo-marker:hover{opacity:0.8}
-.textoo-badge{position:absolute;right:-10px;top:-10px;background:#e53935;color:#fff;font:12px/16px system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;width:18px;height:18px;border-radius:9px;display:none;align-items:center;justify-content:center;z-index:2147483647;box-shadow:0 1px 2px rgba(0,0,0,.25);cursor:pointer;user-select:none}
+.textoo-badge{position:absolute;right:-10px;top:-10px;background:#e53935;color:#fff;font:10px/12px system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;width:14px;height:14px;border-radius:7px;display:none;align-items:center;justify-content:center;z-index:2147483647;box-shadow:0 1px 2px rgba(0,0,0,.25);cursor:pointer;user-select:none}
 .textoo-badge-disabled{background:#9e9e9e;box-shadow:0 1px 2px rgba(0,0,0,.2)}
-.textoo-popover{position:fixed;max-width:360px;background:#fff;color:#111;border:1px solid rgba(0,0,0,.15);border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.18);padding:10px 8px;z-index:2147483647;font:13px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+.textoo-popover{position:fixed;max-width:360px;background:#fff;color:#111;border:1px solid rgba(0,0,0,.15);border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.18);padding:10px 8px;z-index:2147483647;font:13px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;max-width:calc(100vw - 16px);max-height:calc(100vh - 16px);overflow:auto}
 .textoo-popover-header{font-weight:600;margin-bottom:6px}
 .textoo-suggest{display:inline-block;margin:4px 4px 0 0;padding:6px 8px;border-radius:6px;background:#f2f6ff;color:#0b57d0;border:1px solid #c9d7ff;cursor:pointer;user-select:none}
-.textoo-suggest:hover{background:#e8f0ff}
 .textoo-actions{margin-top:8px;display:flex;gap:8px;flex-wrap:wrap}
-.textoo-btn{padding:6px 8px;border:1px solid #ddd;background:#fafafa;border-radius:6px;cursor:pointer}
-.textoo-btn:hover{background:#f0f0f0}
+.textoo-btn{padding:6px 8px;border:1px solid #ddd;background:#fafafa;color:#333;border-radius:6px;cursor:pointer}
+.textoo-btn:hover{background:#f0f0f0;color:#000}
+
+/* FAB et menu positionnés par le script à l'intérieur visuel du composeur */
+/* Aligné avec la logique dynamique (0=vert, >=1=rouge). Nettoyé: pas de bordure ni d'anneau blanc. */
+#hmw-fab{
+  border:0 !important;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.18) !important;
+}
+
+/* Etats explicites au cas où le style inline n'est pas appliqué */
+#hmw-fab[data-state="ok"]{ background:#22c55e; color:#fff; border:0 !important; }
+#hmw-fab[data-state="err"]{ background:#e53935; color:#fff; border:0 !important; }
+#hmw-menu{position:absolute;z-index:2147483000;display:none;background:#fff;border:1px solid #ede9ff;border-radius:10px;box-shadow:0 8px 28px rgba(0,0,0,.12);padding:10px;min-width:176px;width:max-content;max-width:calc(100vw - 16px);max-height:calc(100vh - 16px);overflow:auto}
+#hmw-menu button{display:grid;grid-template-columns:16px 1fr;align-items:center;column-gap:12px;width:100%;padding:10px 16px;border:none;background:transparent;color:#3f23c2;font-size:14px;line-height:20px;cursor:pointer;border-radius:8px;text-align:left;min-height:38px;white-space:nowrap}
+#hmw-menu button + button{margin-top:4px}
+#hmw-menu button:hover{background:#f6f3ff}
+
+
+/* Small grey icons for menu items */
+#hmw-menu .hmw-ico{width:15px;height:15px;display:inline-block;background:#9aa0a6;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;-webkit-mask-position:center;mask-position:center;-webkit-mask-size:15px 15px;mask-size:15px 15px;justify-self:center}
+#hmw-menu button:hover .hmw-ico{background:#6b7280}
+#hmw-menu button span:last-child{display:inline-block;padding-left:0}
+
+/* Corriger (Lucide brush) */
+#hmw-menu .ico-correct{ -webkit-mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m11 10 3 3'/%3E%3Cpath d='M6.5 21A3.5 3.5 0 1 0 3 17.5a2.62 2.62 0 0 1-.708 1.792A1 1 0 0 0 3 21z'/%3E%3Cpath d='M9.969 17.031 21.378 5.624a1 1 0 0 0-3.002-3.002L6.967 14.031'/%3E%3C/svg%3E"); mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m11 10 3 3'/%3E%3Cpath d='M6.5 21A3.5 3.5 0 1 0 3 17.5a2.62 2.62 0 0 1-.708 1.792A1 1 0 0 0 3 21z'/%3E%3Cpath d='M9.969 17.031 21.378 5.624a1 1 0 0 0-3.002-3.002L6.967 14.031'/%3E%3C/svg%3E"); }
+
+/* Réponse rapide (Lucide message-circle-more) */
+#hmw-menu .ico-quick{ -webkit-mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2.992 16.342a2 2 0 0 1 .094 1.167l-1.065 3.29a1 1 0 0 0 1.236 1.168l3.413-.998a2 2 0 0 1 1.099.092 10 10 0 1 0-4.777-4.719'/%3E%3Cpath d='M8 12h.01'/%3E%3Cpath d='M12 12h.01'/%3E%3Cpath d='M16 12h.01'/%3E%3C/svg%3E"); mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2.992 16.342a2 2 0 0 1 .094 1.167l-1.065 3.29a1 1 0 0 0 1.236 1.168l3.413-.998a2 2 0 0 1 1.099.092 10 10 0 1 0-4.777-4.719'/%3E%3Cpath d='M8 12h.01'/%3E%3Cpath d='M12 12h.01'/%3E%3Cpath d='M16 12h.01'/%3E%3C/svg%3E"); }
+
+/* Reformuler (Lucide wand-sparkles) */
+#hmw-menu .ico-reform{ -webkit-mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m21.64 3.64-1.28-1.28a1.21 1.21 0 0 0-1.72 0L2.36 18.64a1.21 1.21 0 0 0 0 1.72l1.28 1.28a1.2 1.2 0 0 0 1.72 0L21.64 5.36a1.2 1.2 0 0 0 0-1.72'/%3E%3Cpath d='m14 7 3 3'/%3E%3Cpath d='M5 6v4'/%3E%3Cpath d='M19 14v4'/%3E%3Cpath d='M10 2v2'/%3E%3Cpath d='M7 8H3'/%3E%3Cpath d='M21 16h-4'/%3E%3Cpath d='M11 3H9'/%3E%3C/svg%3E"); mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m21.64 3.64-1.28-1.28a1.21 1.21 0 0 0-1.72 0L2.36 18.64a1.21 1.21 0 0 0 0 1.72l1.28 1.28a1.2 1.2 0 0 0 1.72 0L21.64 5.36a1.2 1.2 0 0 0 0-1.72'/%3E%3Cpath d='m14 7 3 3'/%3E%3Cpath d='M5 6v4'/%3E%3Cpath d='M19 14v4'/%3E%3Cpath d='M10 2v2'/%3E%3Cpath d='M7 8H3'/%3E%3Cpath d='M21 16h-4'/%3E%3Cpath d='M11 3H9'/%3E%3C/svg%3E"); }

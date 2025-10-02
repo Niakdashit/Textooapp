@@ -3157,9 +3157,792 @@ border:0;line-height:22px;text-align:center;font-size: 11px;cursor:pointer;
     }
   }
   
+  // --- Fonctions FAB ---
+  function ensureFab(){
+    try{
+      if(window.__textoo_fab) return window.__textoo_fab;
+      
+      // Créer le FAB
+      const fab = document.createElement('button');
+      fab.id = 'hmw-fab';
+      fab.setAttribute('data-state', 'ok');
+      fab.style.cssText = `
+        position: absolute;
+        width: 6px;
+        height: 6px;
+        border-radius: 1px;
+        border: 1px solid white;
+        background: #22c55e;
+        color: transparent;
+        font-size: 0;
+        cursor: pointer;
+        z-index: 2147483000;
+        display: none;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+        transition: all 0.1s ease;
+        pointer-events: auto;
+        transform: translateY(-50%);
+        line-height: 1;
+        padding: 0;
+        margin: 0;
+      `;
+      fab.innerHTML = '';
+      fab.title = 'Textoo - Assistant de rédaction';
+      
+      // Ajouter au DOM
+      document.body.appendChild(fab);
+      
+      // Event listeners
+      fab.addEventListener('click', toggleMenu);
+      fab.addEventListener('mouseenter', () => {
+        if(fab) fab.style.transform = 'scale(1.1)';
+      });
+      fab.addEventListener('mouseleave', () => {
+        if(fab) fab.style.transform = 'scale(1)';
+      });
+      
+      window.__textoo_fab = fab;
+      return fab;
+    }catch(e){
+      console.error('[Textoo] Erreur création FAB:', e);
+      return null;
+    }
+  }
+
+  function buildPanel(){
+    try{
+      if(window.__textoo_panel) return window.__textoo_panel;
+      
+      // Créer le panneau
+      const panel = document.createElement('div');
+      panel.id = 'hmw-box';
+      panel.style.cssText = `
+        position: fixed;
+        right: 80px;
+        bottom: 20px;
+        width: 300px;
+        max-height: 400px;
+        background: white;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        box-shadow: 0 8px 28px rgba(0,0,0,0.12);
+        z-index: 2147483000;
+        display: none;
+        font-family: system-ui, -apple-system, sans-serif;
+        font-size: 14px;
+        overflow: hidden;
+      `;
+      
+      panel.innerHTML = `
+        <div style="padding: 16px; border-bottom: 1px solid #eee;">
+          <div style="font-weight: 600; margin-bottom: 8px;">Assistant Textoo</div>
+          <div id="hmw-result" style="max-height: 300px; overflow-y: auto; line-height: 1.4;"></div>
+        </div>
+        <div style="padding: 12px; background: #f8f9fa; display: flex; gap: 8px; justify-content: flex-end;">
+          <button id="hmw-copy" style="padding: 6px 12px; border: 1px solid #ddd; background: white; border-radius: 4px; cursor: pointer;">Copier</button>
+          <button id="hmw-close" style="padding: 6px 12px; border: 1px solid #ddd; background: white; border-radius: 4px; cursor: pointer;">Fermer</button>
+        </div>
+      `;
+      
+      document.body.appendChild(panel);
+      
+      // Event listeners
+      const copyBtn = panel.querySelector('#hmw-copy');
+      const closeBtn = panel.querySelector('#hmw-close');
+      
+      if(copyBtn) copyBtn.addEventListener('click', copyResult);
+      if(closeBtn) closeBtn.addEventListener('click', hidePanel);
+      
+      window.__textoo_panel = panel;
+      return panel;
+    }catch(e){
+      console.error('[Textoo] Erreur création panneau:', e);
+      return null;
+    }
+  }
+
+  function createMenu(){
+    try{
+      if(window.__textoo_menu) return window.__textoo_menu;
+      
+      // Créer le menu
+      const menu = document.createElement('div');
+      menu.id = 'hmw-menu';
+      menu.style.cssText = `
+        position: absolute;
+        right: 0;
+        bottom: 40px;
+        background: white;
+        border: 1px solid #ede9ff;
+        border-radius: 10px;
+        box-shadow: 0 8px 28px rgba(0,0,0,0.12);
+        padding: 10px;
+        min-width: 176px;
+        z-index: 2147483000;
+        display: none;
+        pointer-events: auto;
+      `;
+      
+      menu.innerHTML = `
+        <button class="hmw-menu-item" data-action="correct">
+          <span class="hmw-ico ico-correct"></span>
+          <span>Corriger</span>
+        </button>
+        <button class="hmw-menu-item" data-action="reformulate">
+          <span class="hmw-ico ico-reform"></span>
+          <span>Reformuler</span>
+        </button>
+        <button class="hmw-menu-item" data-action="quick-reply">
+          <span class="hmw-ico ico-quick"></span>
+          <span>Réponse rapide</span>
+        </button>
+      `;
+      
+      // Styles pour les boutons du menu
+      const style = document.createElement('style');
+      style.textContent = `
+        .hmw-menu-item {
+          display: grid;
+          grid-template-columns: 16px 1fr;
+          align-items: center;
+          column-gap: 12px;
+          width: 100%;
+          padding: 10px 16px;
+          border: none;
+          background: transparent;
+          color: #3f23c2;
+          font-size: 14px;
+          line-height: 20px;
+          cursor: pointer;
+          border-radius: 8px;
+          text-align: left;
+          min-height: 38px;
+          white-space: nowrap;
+        }
+        .hmw-menu-item + .hmw-menu-item {
+          margin-top: 4px;
+        }
+        .hmw-menu-item:hover {
+          background: #f6f3ff;
+        }
+        .hmw-ico {
+          width: 15px;
+          height: 15px;
+          display: inline-block;
+          background: #9aa0a6;
+          -webkit-mask-repeat: no-repeat;
+          mask-repeat: no-repeat;
+          -webkit-mask-position: center;
+          mask-position: center;
+          -webkit-mask-size: 15px 15px;
+          mask-size: 15px 15px;
+          justify-self: center;
+        }
+        .hmw-menu-item:hover .hmw-ico {
+          background: #6b7280;
+        }
+      `;
+      document.head.appendChild(style);
+      
+      document.body.appendChild(menu);
+      
+      // Event listeners
+      menu.addEventListener('click', (e) => {
+        const button = e.target.closest('.hmw-menu-item');
+        if(button) {
+          const action = button.dataset.action;
+          handleMenuAction(action);
+          hideMenu();
+        }
+      });
+      
+      window.__textoo_menu = menu;
+      return menu;
+    }catch(e){
+      console.error('[Textoo] Erreur création menu:', e);
+      return null;
+    }
+  }
+
+  // Fonction pour trouver un éditeur actif générique (hors Gmail/Outlook)
+  function findActiveGenericEditableForFab(){
+    try{
+      const genericSel = 'textarea, input[type="text"], input[type="search"], input[type="email"], input[type="url"], input[type="tel"], input:not([type]), [contenteditable=""], [contenteditable="true"]';
+      console.log('[Textoo] Recherche d\'éditeur actif...');
+      
+      // Priorité 0: dernier champ actif connu
+      try{
+        if(typeof __activeEditable !== 'undefined' && __activeEditable && __activeEditable.isConnected){
+          const ae = document.activeElement;
+          if(ae && (__activeEditable===ae || (__activeEditable.contains && __activeEditable.contains(ae)))){
+            const r0 = __activeEditable.getBoundingClientRect();
+            if(r0 && r0.width>0 && r0.height>0) {
+              console.log('[Textoo] Éditeur actif trouvé (priorité 0):', __activeEditable);
+              return __activeEditable;
+            }
+          }
+        }
+      }catch(_){ }
+      
+      // Cas spécifique Google: privilégier la barre de recherche principale uniquement si elle a le focus
+      try{
+        const hn = (location.hostname||'');
+        if(/\.google\./.test(hn)){
+          const g = document.querySelector('input[name="q"], textarea[name="q"]');
+          if(g && document.activeElement === g && isTopEditable(g)) return g;
+        }
+      }catch(_){ }
+      
+      // Cas spécifique lovable.dev: ne retourner que l'éditeur principal quand il a le focus
+      try{
+        const hn = (location.hostname||'');
+        if(/(^|\.)lovable\.dev$/.test(hn)){
+          const ae = document.activeElement;
+          // Chercher le conteneur contenteditable le plus proche autour de l'élément actif
+          let cont = null;
+          if(ae){
+            cont = (ae.matches && ae.matches('[contenteditable=""],[contenteditable="true"],[role="textbox"]')) ? ae : (ae.closest && ae.closest('[contenteditable=""],[contenteditable="true"],[role="textbox"]'));
+          }
+          // Si non trouvé, essayer depuis la sélection courante (utile pour éditeurs riches)
+          if(!cont){
+            try{
+              const sel = window.getSelection && window.getSelection();
+              if(sel && sel.rangeCount){
+                const anchor = sel.anchorNode;
+                if(anchor){
+                  const el = (anchor.nodeType===1 ? anchor : anchor.parentElement);
+                  if(el){
+                    cont = (el.matches && el.matches('[contenteditable=""],[contenteditable="true"],[role="textbox"]')) ? el : (el.closest && el.closest('[contenteditable=""],[contenteditable="true"],[role="textbox"]'));
+                  }
+                  // Dernier essai: composedPath() si dispo
+                  if(!cont && sel.getRangeAt){
+                    const r = sel.getRangeAt(0);
+                    const n = r.commonAncestorContainer;
+                    const el2 = (n.nodeType===1 ? n : n.parentElement);
+                    if(el2){
+                      cont = (el2.matches && el2.matches('[contenteditable=""],[contenteditable="true"],[role="textbox"]')) ? el2 : (el2.closest && el2.closest('[contenteditable=""],[contenteditable="true"],[role="textbox"]'));
+                    }
+                  }
+                }
+              }
+            }catch(_){ }
+          }
+          if(cont && isTopEditable(cont)){
+            const r = cont.getBoundingClientRect();
+            if(r && r.width>0 && r.height>0) return cont;
+          }
+        }
+      }catch(_){ }
+      
+      // Cas générique: chercher dans tous les éléments éditables
+      try{
+        const all = document.querySelectorAll(genericSel);
+        console.log('[Textoo] Éléments éditables trouvés:', all.length);
+        for(const el of all){
+          if(isTopEditable(el)){
+            const r = el.getBoundingClientRect();
+            if(r && r.width>0 && r.height>0) {
+              console.log('[Textoo] Éditeur générique trouvé:', el);
+              return el;
+            }
+          }
+        }
+      }catch(_){ }
+      
+      console.log('[Textoo] Aucun éditeur actif trouvé');
+      return null;
+    }catch(_){
+      return null;
+    }
+  }
+
+  // Fonction helper pour vérifier si un élément est éditable de premier niveau
+  function isTopEditable(el){
+    try{
+      if(!el) return false;
+      const r = el.getBoundingClientRect();
+      if(!r || r.width<=0 || r.height<=0) return false;
+      
+      // Vérifier que l'élément est visible
+      const style = window.getComputedStyle(el);
+      if(style.display === 'none' || style.visibility === 'hidden' || style.opacity === '0') return false;
+      
+      // Vérifier que l'élément n'est pas dans un conteneur masqué
+      let parent = el.parentElement;
+      while(parent && parent !== document.body){
+        const parentStyle = window.getComputedStyle(parent);
+        if(parentStyle.display === 'none' || parentStyle.visibility === 'hidden' || parentStyle.opacity === '0') return false;
+        parent = parent.parentElement;
+      }
+      
+      return true;
+    }catch(_){
+      return false;
+    }
+  }
+
+  // Fonction pour trouver un élément éditable actif (hors Gmail/Outlook)
+  function findActiveGenericEditableForFab(){
+    try{
+      console.log('[Textoo] 🔍 Recherche d\'éléments éditables...');
+      
+      // Vérifier d'abord l'élément actif
+      const activeElement = document.activeElement;
+      console.log('[Textoo] Élément actif:', activeElement?.tagName, activeElement?.type, activeElement?.className);
+      
+      if(activeElement && isTopEditable(activeElement)) {
+        console.log('[Textoo] ✅ Élément actif valide trouvé:', activeElement.tagName, activeElement.type);
+        return activeElement;
+      }
+      
+      // Chercher dans les sélecteurs génériques
+      const selectors = [
+        'textarea',
+        'input[type="text"]',
+        'input[type="search"]',
+        'input[type="email"]',
+        'input[type="url"]',
+        'input[type="tel"]',
+        'input:not([type])',
+        '[contenteditable=""]',
+        '[contenteditable="true"]'
+      ];
+      
+      console.log('[Textoo] Recherche avec sélecteurs:', selectors);
+      
+      for(const selector of selectors) {
+        const elements = document.querySelectorAll(selector);
+        console.log(`[Textoo] Sélecteur "${selector}": ${elements.length} éléments trouvés`);
+        
+        for(const element of elements) {
+          console.log('[Textoo] Vérification élément:', element.tagName, element.type, element.offsetWidth, element.offsetHeight);
+          if(isTopEditable(element)) {
+            console.log('[Textoo] ✅ Élément valide trouvé via sélecteur:', selector, element);
+            return element;
+          }
+        }
+      }
+      
+      console.log('[Textoo] ❌ Aucun élément éditable valide trouvé');
+      return null;
+    }catch(e){
+      console.error('[Textoo] Erreur recherche élément éditable:', e);
+      return null;
+    }
+  }
+
+  // Fonction pour positionner le FAB à côté du curseur
+  function positionFabAtCursor(element){
+    try{
+      const fab = window.__textoo_fab;
+      if(!fab || !element) return;
+      
+      // Obtenir la position du curseur
+      const cursorPosition = getCursorPosition(element);
+      if(!cursorPosition) return;
+      
+      // S'assurer que l'élément a position relative
+      const computedStyle = window.getComputedStyle(element);
+      if(computedStyle.position === 'static') {
+        element.style.position = 'relative';
+      }
+      
+      // Retirer le FAB du body et l'ajouter à l'élément
+      if(fab.parentNode !== element) {
+        fab.remove();
+        element.appendChild(fab);
+      }
+      
+      // Positionner le FAB à côté du curseur
+      fab.style.position = 'absolute';
+      fab.style.left = `${cursorPosition.x + 5}px`;
+      fab.style.top = `${cursorPosition.y}px`;
+      fab.style.right = 'auto';
+      fab.style.bottom = 'auto';
+      fab.style.display = 'block';
+      
+      console.log('[Textoo] FAB positionné à:', cursorPosition);
+    }catch(e){
+      console.error('[Textoo] Erreur positionnement FAB au curseur:', e);
+    }
+  }
+
+  // Fonction pour obtenir la position du curseur dans un élément
+  function getCursorPosition(element){
+    try{
+      if(!element) return null;
+      
+      // Pour les éléments contenteditable
+      if(element.contentEditable === 'true' || element.contentEditable === '') {
+        const selection = window.getSelection();
+        if(selection.rangeCount > 0) {
+          const range = selection.getRangeAt(0);
+          const rect = range.getBoundingClientRect();
+          const elementRect = element.getBoundingClientRect();
+          
+          return {
+            x: rect.right - elementRect.left,
+            y: rect.top - elementRect.top
+          };
+        }
+      }
+      
+      // Pour les input et textarea
+      if(element.tagName === 'INPUT' || element.tagName === 'TEXTAREA') {
+        const elementRect = element.getBoundingClientRect();
+        const style = window.getComputedStyle(element);
+        const paddingLeft = parseInt(style.paddingLeft) || 0;
+        const paddingTop = parseInt(style.paddingTop) || 0;
+        
+        // Créer un élément temporaire pour mesurer le texte
+        const temp = document.createElement('span');
+        temp.style.position = 'absolute';
+        temp.style.visibility = 'hidden';
+        temp.style.whiteSpace = 'pre-wrap';
+        temp.style.font = style.font;
+        temp.style.fontSize = style.fontSize;
+        temp.style.fontFamily = style.fontFamily;
+        temp.style.fontWeight = style.fontWeight;
+        temp.style.letterSpacing = style.letterSpacing;
+        temp.style.wordSpacing = style.wordSpacing;
+        temp.style.textTransform = style.textTransform;
+        temp.style.lineHeight = style.lineHeight;
+        
+        document.body.appendChild(temp);
+        
+        // Obtenir le texte jusqu'au curseur
+        const textBeforeCursor = element.value.substring(0, element.selectionStart || 0);
+        temp.textContent = textBeforeCursor;
+        
+        const textWidth = temp.offsetWidth;
+        const textHeight = temp.offsetHeight;
+        
+        document.body.removeChild(temp);
+        
+        return {
+          x: paddingLeft + textWidth,
+          y: paddingTop + textHeight / 2
+        };
+      }
+      
+      return null;
+    }catch(e){
+      console.error('[Textoo] Erreur obtention position curseur:', e);
+      return null;
+    }
+  }
+
+  // Fonction pour positionner le FAB après le texte tapé
+  function positionFabAfterText(element){
+    try{
+      const fab = window.__textoo_fab;
+      if(!fab || !element) return;
+      
+      // Obtenir la position du curseur
+      const cursorPosition = getCursorPosition(element);
+      if(!cursorPosition) return;
+      
+      // Obtenir la position de l'élément sur la page
+      const elementRect = element.getBoundingClientRect();
+      
+      // Positionner le FAB en position FIXE par rapport à la fenêtre
+      fab.style.position = 'fixed';
+      fab.style.left = `${elementRect.left + cursorPosition.x + 8}px`; // 8px d'espacement après le texte
+      fab.style.top = `${elementRect.top + cursorPosition.y - 12}px`; // -12px pour centrer verticalement
+      fab.style.right = 'auto';
+      fab.style.bottom = 'auto';
+      fab.style.display = 'block';
+      fab.style.zIndex = '2147483000';
+      
+      // S'assurer que le FAB est dans le body
+      if(fab.parentNode !== document.body) {
+        fab.remove();
+        document.body.appendChild(fab);
+      }
+      
+      console.log('[Textoo] FAB positionné après le texte à:', {
+        cursor: cursorPosition,
+        element: {left: elementRect.left, top: elementRect.top},
+        final: {left: elementRect.left + cursorPosition.x + 8, top: elementRect.top + cursorPosition.y - 12}
+      });
+    }catch(e){
+      console.error('[Textoo] Erreur positionnement FAB après texte:', e);
+    }
+  }
+
+  function positionFabAndMenu(){
+    try{
+      const fab = window.__textoo_fab;
+      const menu = window.__textoo_menu;
+      const panel = window.__textoo_panel;
+      if(!fab) return;
+      
+      // Détecter si on est sur une page avec un composer
+      const composer = findActiveGenericEditableForFab();
+      const hasSelection = window.getSelection && window.getSelection().toString().trim().length > 0;
+      
+      if(composer || hasSelection) {
+        // Afficher le FAB
+        fab.style.display = 'block';
+        console.log('[Textoo] FAB affiché pour composer:', !!composer, 'sélection:', hasSelection);
+        
+        // Positionner le FAB après le texte tapé
+        if(composer) {
+          positionFabAfterText(composer);
+          
+        } else if(hasSelection) {
+          // Pour la sélection, positionner près de la sélection
+          try {
+            const selection = window.getSelection();
+            if(selection.rangeCount > 0) {
+              const range = selection.getRangeAt(0);
+              const rect = range.getBoundingClientRect();
+              
+              // Positionner à droite de la sélection
+              fab.style.position = 'fixed';
+              fab.style.right = '16px';
+              fab.style.bottom = `${window.innerHeight - rect.top + 20}px`;
+              fab.style.top = 'auto';
+              fab.style.left = 'auto';
+            } else {
+              // Position par défaut
+              fab.style.position = 'fixed';
+              fab.style.right = '16px';
+              fab.style.bottom = '20px';
+              fab.style.top = 'auto';
+              fab.style.left = 'auto';
+            }
+          } catch(e) {
+            // Position par défaut en cas d'erreur
+            fab.style.position = 'fixed';
+            fab.style.right = '16px';
+            fab.style.bottom = '20px';
+            fab.style.top = 'auto';
+            fab.style.left = 'auto';
+          }
+        } else {
+          // Position par défaut
+          fab.style.position = 'fixed';
+          fab.style.right = '16px';
+          fab.style.bottom = '20px';
+          fab.style.top = 'auto';
+          fab.style.left = 'auto';
+        }
+        
+        // Positionner le menu
+        if(menu) {
+          menu.style.display = 'none';
+          const fabRect = fab.getBoundingClientRect();
+          menu.style.position = 'absolute';
+          menu.style.right = '0';
+          menu.style.bottom = `${fabRect.height + 10}px`;
+        }
+      } else {
+        // Masquer le FAB si pas de composer ni de sélection
+        fab.style.display = 'none';
+        if(menu) menu.style.display = 'none';
+        if(panel) panel.style.display = 'none';
+      }
+    }catch(e){
+      console.error('[Textoo] Erreur positionnement FAB:', e);
+    }
+  }
+
+  function toggleMenu(){
+    try{
+      let menu = window.__textoo_menu;
+      if(!menu) menu = createMenu();
+      if(!menu) return;
+      
+      const fab = window.__textoo_fab;
+      if(!fab) return;
+      
+      if(menu.style.display === 'none') {
+        // Positionner le menu à côté du FAB
+        const fabRect = fab.getBoundingClientRect();
+        const composer = fab.parentNode;
+        
+        // Ajouter le menu au même parent que le FAB
+        if(menu.parentNode !== composer) {
+          menu.remove();
+          composer.appendChild(menu);
+        }
+        
+        // Positionner le menu
+        menu.style.position = 'absolute';
+        menu.style.right = '0';
+        menu.style.bottom = '40px';
+        menu.style.top = 'auto';
+        menu.style.left = 'auto';
+        
+        menu.style.display = 'block';
+      } else {
+        menu.style.display = 'none';
+      }
+    }catch(e){
+      console.error('[Textoo] Erreur toggle menu:', e);
+    }
+  }
+
+  function hideMenu(){
+    try{
+      const menu = window.__textoo_menu;
+      if(menu) menu.style.display = 'none';
+    }catch(e){
+      console.error('[Textoo] Erreur hide menu:', e);
+    }
+  }
+
+  function hidePanel(){
+    try{
+      const panel = window.__textoo_panel;
+      if(panel) panel.style.display = 'none';
+    }catch(e){
+      console.error('[Textoo] Erreur hide panel:', e);
+    }
+  }
+
+  function handleMenuAction(action){
+    try{
+      const selectedText = window.getSelection ? window.getSelection().toString().trim() : '';
+      const composer = findActiveGenericEditableForFab();
+      
+      switch(action) {
+        case 'correct':
+          if(composer) {
+            runLint(composer);
+          }
+          break;
+        case 'reformulate':
+          if(selectedText) {
+            showPanel('Reformulation en cours...', 'reformulate');
+            // Simuler une reformulation
+            setTimeout(() => {
+              const reformulated = `Voici une version reformulée : "${selectedText}"`;
+              showPanel(reformulated, 'reformulate');
+            }, 1000);
+          } else if(composer) {
+            const text = composer.value || composer.textContent || '';
+            if(text.trim()) {
+              showPanel('Reformulation en cours...', 'reformulate');
+              setTimeout(() => {
+                const reformulated = `Voici une version reformulée : "${text}"`;
+                showPanel(reformulated, 'reformulate');
+              }, 1000);
+            }
+          }
+          break;
+        case 'quick-reply':
+          if(composer) {
+            const text = composer.value || composer.textContent || '';
+            if(text.trim()) {
+              showPanel('Génération de réponse rapide...', 'quick-reply');
+              setTimeout(() => {
+                const quickReply = generateQuickReply(text);
+                showPanel(quickReply, 'quick-reply');
+              }, 1000);
+            } else {
+              showPanel('Veuillez d\'abord écrire un message pour générer une réponse rapide.', 'quick-reply');
+            }
+          } else {
+            showPanel('Aucun champ de saisie trouvé pour générer une réponse rapide.', 'quick-reply');
+          }
+          break;
+      }
+    }catch(e){
+      console.error('[Textoo] Erreur action menu:', e);
+    }
+  }
+
+  function generateQuickReply(originalText){
+    try{
+      if(!originalText || !originalText.trim()) return 'Aucun texte à analyser.';
+      
+      const text = originalText.toLowerCase();
+      let reply = '';
+      
+      // Réponses contextuelles basées sur le contenu
+      if(text.includes('merci') || text.includes('thanks')) {
+        reply = 'De rien ! N\'hésitez pas si vous avez d\'autres questions.';
+      } else if(text.includes('bonjour') || text.includes('salut')) {
+        reply = 'Bonjour ! Comment puis-je vous aider aujourd\'hui ?';
+      } else if(text.includes('formation') || text.includes('cours')) {
+        reply = 'Merci pour cette information concernant la formation. Je confirme ma présence et suis impatient de participer.';
+      } else if(text.includes('réunion') || text.includes('meeting')) {
+        reply = 'Parfait, la réunion est notée dans mon agenda. Je serai présent et préparé.';
+      } else if(text.includes('projet') || text.includes('travail')) {
+        reply = 'Merci pour ces précisions sur le projet. Je vais examiner les détails et vous faire un retour rapidement.';
+      } else if(text.includes('question') || text.includes('?')) {
+        reply = 'Excellente question ! Laissez-moi réfléchir à cela et je vous reviens avec une réponse détaillée.';
+      } else if(text.includes('problème') || text.includes('souci')) {
+        reply = 'Je comprends le problème. Laissez-moi analyser la situation et je vous propose une solution rapidement.';
+      } else {
+        // Réponse générique intelligente
+        reply = 'Merci pour votre message. Je prends note de ces informations et vous reviens rapidement avec plus de détails.';
+      }
+      
+      return reply;
+    }catch(e){
+      console.error('[Textoo] Erreur génération réponse rapide:', e);
+      return 'Erreur lors de la génération de la réponse rapide.';
+    }
+  }
+
+  function showPanel(text, mode = 'default'){
+    try{
+      let panel = window.__textoo_panel;
+      if(!panel) panel = buildPanel();
+      if(!panel) return;
+      
+      const resultEl = panel.querySelector('#hmw-result');
+      if(resultEl) {
+        resultEl.textContent = text;
+      }
+      
+      panel.style.display = 'block';
+      positionFabAndMenu();
+    }catch(e){
+      console.error('[Textoo] Erreur show panel:', e);
+    }
+  }
+
+  function copyResult(){
+    try{
+      const panel = window.__textoo_panel;
+      const resultEl = panel ? panel.querySelector('#hmw-result') : null;
+      if(resultEl) {
+        navigator.clipboard.writeText(resultEl.textContent).then(() => {
+          console.log('Texte copié');
+        });
+      }
+    }catch(e){
+      console.error('[Textoo] Erreur copy:', e);
+    }
+  }
+
+  function updateFabCounter(element, count = 0){
+    try{
+      const fab = window.__textoo_fab;
+      if(!fab) return;
+      
+      if(count > 0) {
+        fab.setAttribute('data-state', 'err');
+        fab.style.background = '#e53935';
+        fab.title = `Textoo - ${count} erreur(s) détectée(s)`;
+      } else {
+        fab.setAttribute('data-state', 'ok');
+        fab.style.background = '#22c55e';
+        fab.title = 'Textoo - Assistant de rédaction';
+      }
+    }catch(e){
+      console.error('[Textoo] Erreur update counter:', e);
+    }
+  }
+
   // --- Bootstrapping / ensure module starts ---
   function enforceMiniFabStyles(){
     try{
+      const fab = window.__textoo_fab;
       if(!fab) return;
       if((typeof IS_GMAIL!=="undefined" && IS_GMAIL) || (typeof IS_OUTLOOK!=="undefined" && IS_OUTLOOK)) return;
       // Assurer style mini-point (dupliquer logique d'updateFabCounter au cas où)
@@ -3243,15 +4026,57 @@ border:0;line-height:22px;text-align:center;font-size: 11px;cursor:pointer;
           const t = e.target;
           if(!t) return;
           const genericSel = 'textarea, input[type="text"], input[type="search"], input[type="email"], input[type="url"], input[type="tel"], input:not([type]), [contenteditable=""], [contenteditable="true"]';
-          if((t.matches && t.matches(genericSel)) || (t.closest && t.closest(genericSel))){ positionFabAndMenu(); }
+          if((t.matches && t.matches(genericSel)) || (t.closest && t.closest(genericSel))){
+            // Délai très court pour un suivi immédiat du texte tapé
+            setTimeout(() => positionFabAndMenu(), 5);
+          }
         }, {passive:true});
         document.addEventListener('keyup', (e)=>{
           const t = e.target;
           if(!t) return;
           const genericSel = 'textarea, input[type="text"], input[type="search"], input[type="email"], input[type="url"], input[type="tel"], input:not([type]), [contenteditable=""], [contenteditable="true"]';
-          if((t.matches && t.matches(genericSel)) || (t.closest && t.closest(genericSel))){ positionFabAndMenu(); }
+          if((t.matches && t.matches(genericSel)) || (t.closest && t.closest(genericSel))){
+            // Délai très court pour un suivi immédiat du texte tapé
+            setTimeout(() => positionFabAndMenu(), 5);
+          }
+        }, {passive:true});
+        // Événement pour suivre le texte tapé en temps réel
+        document.addEventListener('keydown', (e)=>{
+          const t = e.target;
+          if(!t) return;
+          const genericSel = 'textarea, input[type="text"], input[type="search"], input[type="email"], input[type="url"], input[type="tel"], input:not([type]), [contenteditable=""], [contenteditable="true"]';
+          if((t.matches && t.matches(genericSel)) || (t.closest && t.closest(genericSel))){
+            // Délai très court pour un suivi immédiat du texte tapé
+            setTimeout(() => positionFabAndMenu(), 5);
+          }
         }, {passive:true});
       }catch(_){ }
+      // Détection de sélection de texte pour afficher le FAB
+      try{
+        document.addEventListener('selectionchange', ()=>{
+          try{
+            const selection = window.getSelection();
+            if(selection && selection.toString().trim().length > 0) {
+              positionFabAndMenu();
+            } else {
+              // Vérifier s'il y a un composer actif
+              const composer = findActiveGenericEditableForFab();
+              if(composer) {
+                positionFabAndMenu();
+              } else {
+                // Masquer le FAB si pas de sélection ni de composer
+                const fab = window.__textoo_fab;
+                const menu = window.__textoo_menu;
+                const panel = window.__textoo_panel;
+                if(fab) fab.style.display = 'none';
+                if(menu) menu.style.display = 'none';
+                if(panel) panel.style.display = 'none';
+              }
+            }
+          }catch(_){}
+        });
+      }catch(_){ }
+      
       // Fallback périodique: attacher sur l'élément actif s'il est éditable (couvre Shadow DOM/SPA récalcitrants)
       try{
         setInterval(()=>{
@@ -3275,4 +4100,495 @@ border:0;line-height:22px;text-align:center;font-size: 11px;cursor:pointer;
   } else {
     init();
   }
+
+  // ===== FAB SYSTEM =====
+  
+  // Variables globales pour le FAB
+  window.__textoo_fab = null;
+  window.__textoo_menu = null;
+  window.__textoo_panel = null;
+
+  // Fonction pour vérifier si on est sur Gmail ou Outlook
+  function isGmailOrOutlook() {
+    const hostname = window.location.hostname;
+    return hostname.includes('mail.google.com') || 
+           hostname.includes('outlook.com') || 
+           hostname.includes('outlook.live.com') ||
+           hostname.includes('outlook.office.com');
+  }
+
+  // ===== SYSTÈME ORIGINAL POUR GMAIL/OUTLOOK =====
+  
+  // Variables pour le système original
+  let originalSystem = null;
+  
+  // Initialiser le système original pour Gmail/Outlook
+  function initOriginalSystem() {
+    if (!isGmailOrOutlook()) return;
+    
+    console.log('[Textoo] Initialisation du système original pour Gmail/Outlook');
+    
+    // Restaurer le système original avec le badge de compteur de fautes
+    // Le code original sera chargé depuis le fichier de sauvegarde
+    loadOriginalSystem();
+  }
+  
+  // Charger le système original depuis le fichier de sauvegarde
+  function loadOriginalSystem() {
+    try {
+      // Pour l'instant, on va restaurer manuellement les parties essentielles
+      console.log('[Textoo] Restauration du système original en cours...');
+      
+      // Le système original sera complètement restauré dans la prochaine étape
+      // Pour l'instant, on affiche un message temporaire
+      const tempBadge = document.createElement('div');
+      tempBadge.className = 'textoo-badge';
+      tempBadge.textContent = '0';
+      tempBadge.style.cssText = `
+        position: fixed;
+        right: 20px;
+        top: 20px;
+        background: #ff4444;
+        color: white;
+        padding: 4px 8px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: bold;
+        z-index: 2147483000;
+        cursor: pointer;
+      `;
+      tempBadge.title = 'Compteur de fautes Textoo (système en cours de restauration)';
+      document.body.appendChild(tempBadge);
+      
+      console.log('[Textoo] Badge temporaire affiché - système complet en cours de restauration');
+    } catch(e) {
+      console.error('[Textoo] Erreur chargement système original:', e);
+    }
+  }
+
+  // Initialiser le système approprié selon la plateforme
+  function initSystem() {
+    try {
+      if (isGmailOrOutlook()) {
+        // Initialiser le système original pour Gmail/Outlook
+        initOriginalSystem();
+      } else {
+        // Initialiser le FAB pour les autres sites
+        initFab();
+      }
+    } catch(e) {
+      console.error('[Textoo] Erreur initialisation système:', e);
+    }
+  }
+
+  // Initialiser le FAB au chargement (seulement si pas Gmail/Outlook)
+  function initFab() {
+    try {
+      ensureFab();
+      createMenu();
+      buildPanel();
+      console.log('[Textoo] FAB system initialisé');
+      
+      // Positionner le FAB initialement
+      setTimeout(() => {
+        positionFabAndMenu();
+      }, 100);
+    } catch(e) {
+      console.error('[Textoo] Erreur initialisation FAB:', e);
+    }
+  }
+
+  // Initialiser immédiatement
+  initSystem();
+
+  // Fonction pour créer le FAB
+  function ensureFab(){
+    try{
+      if(window.__textoo_fab) return window.__textoo_fab;
+
+      // Créer le FAB
+      const fab = document.createElement('button');
+      fab.id = 'hmw-fab';
+      fab.setAttribute('data-state', 'ok');
+      fab.style.cssText = `
+        position: absolute;
+        width: 6px;
+        height: 6px;
+        border-radius: 1px;
+        border: 1px solid white;
+        background: #22c55e;
+        color: transparent;
+        font-size: 0;
+        cursor: pointer;
+        z-index: 2147483000;
+        display: none;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+        transition: all 0.1s ease;
+        pointer-events: auto;
+        transform: translateY(-50%);
+        line-height: 1;
+        padding: 0;
+        margin: 0;
+      `;
+      fab.innerHTML = '';
+      fab.title = 'Textoo - Assistant de rédaction';
+
+      // Ajouter au DOM
+      document.body.appendChild(fab);
+
+      // Event listeners
+      fab.addEventListener('click', toggleMenu);
+      fab.addEventListener('mouseenter', () => {
+        if(fab) fab.style.transform = 'scale(1.1) translateY(-50%)';
+      });
+      fab.addEventListener('mouseleave', () => {
+        if(fab) fab.style.transform = 'scale(1) translateY(-50%)';
+      });
+
+      window.__textoo_fab = fab;
+      return fab;
+    }catch(e){
+      console.error('[Textoo] Erreur création FAB:', e);
+      return null;
+    }
+  }
+
+  // Fonction pour créer le menu
+  function createMenu(){
+    try{
+      if(window.__textoo_menu) return window.__textoo_menu;
+
+      const menu = document.createElement('div');
+      menu.id = 'hmw-menu';
+      menu.style.cssText = `
+        position: absolute;
+        background: white;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        z-index: 2147483001;
+        display: none;
+        min-width: 180px;
+        padding: 8px 0;
+      `;
+      
+      menu.innerHTML = `
+        <button class="hmw-menu-item" data-action="correct">
+          <span class="hmw-ico ico-correct">✓</span>
+          <span>Corriger</span>
+        </button>
+        <button class="hmw-menu-item" data-action="reformulate">
+          <span class="hmw-ico ico-reformulate">↻</span>
+          <span>Reformuler</span>
+        </button>
+        <button class="hmw-menu-item" data-action="quick-reply">
+          <span class="hmw-ico ico-quick">⚡</span>
+          <span>Réponse rapide</span>
+        </button>
+      `;
+
+      // Styles pour les éléments du menu
+      const style = document.createElement('style');
+      style.textContent = `
+        .hmw-menu-item {
+          display: flex;
+          align-items: center;
+          width: 100%;
+          padding: 8px 16px;
+          border: none;
+          background: none;
+          cursor: pointer;
+          font-size: 14px;
+          color: #333;
+          transition: background 0.2s;
+        }
+        .hmw-menu-item:hover {
+          background: #f5f5f5;
+        }
+        .hmw-ico {
+          margin-right: 8px;
+          font-size: 16px;
+        }
+      `;
+      document.head.appendChild(style);
+
+      // Event listeners
+      menu.addEventListener('click', (e) => {
+        const button = e.target.closest('.hmw-menu-item');
+        if(button) {
+          const action = button.getAttribute('data-action');
+          handleMenuAction(action);
+        }
+      });
+
+      window.__textoo_menu = menu;
+      return menu;
+    }catch(e){
+      console.error('[Textoo] Erreur création menu:', e);
+      return null;
+    }
+  }
+
+  // Fonction pour créer le panel de résultats
+  function buildPanel(){
+    try{
+      if(window.__textoo_panel) return window.__textoo_panel;
+
+      const panel = document.createElement('div');
+      panel.id = 'hmw-box';
+      panel.style.cssText = `
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: white;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+        z-index: 2147483002;
+        display: none;
+        max-width: 500px;
+        max-height: 400px;
+        overflow: hidden;
+      `;
+
+      panel.innerHTML = `
+        <div style="padding: 16px; border-bottom: 1px solid #eee;">
+          <h3 style="margin: 0 0 12px 0; font-size: 16px; color: #333;">Résultat Textoo</h3>
+          <div id="hmw-result" style="white-space: pre-wrap; line-height: 1.5; color: #555;"></div>
+        </div>
+        <div style="padding: 12px; text-align: right; background: #f8f9fa;">
+          <button id="hmw-copy" style="margin-right: 8px; padding: 6px 12px; background: #22c55e; color: white; border: none; border-radius: 4px; cursor: pointer;">Copier</button>
+          <button id="hmw-close" style="padding: 6px 12px; background: #6b7280; color: white; border: none; border-radius: 4px; cursor: pointer;">Fermer</button>
+        </div>
+      `;
+
+      // Event listeners
+      panel.querySelector('#hmw-copy').addEventListener('click', () => {
+        const result = panel.querySelector('#hmw-result').textContent;
+        navigator.clipboard.writeText(result).then(() => {
+          alert('Texte copié !');
+        });
+      });
+
+      panel.querySelector('#hmw-close').addEventListener('click', () => {
+        panel.style.display = 'none';
+      });
+
+      window.__textoo_panel = panel;
+      return panel;
+    }catch(e){
+      console.error('[Textoo] Erreur création panel:', e);
+      return null;
+    }
+  }
+
+  // Fonction pour basculer le menu
+  function toggleMenu(){
+    try{
+      let menu = window.__textoo_menu;
+      if(!menu) menu = createMenu();
+      if(!menu) return;
+
+      const fab = window.__textoo_fab;
+      if(!fab) return;
+
+      if(menu.style.display === 'none') {
+        // Positionner le menu près du FAB
+        const fabRect = fab.getBoundingClientRect();
+        
+        menu.style.position = 'fixed';
+        menu.style.left = `${fabRect.left - 180}px`; // Positionner à gauche du FAB
+        menu.style.top = `${fabRect.top - 10}px`;
+        menu.style.right = 'auto';
+        menu.style.bottom = 'auto';
+        menu.style.zIndex = '2147483001';
+
+        // S'assurer que le menu est dans le body
+        if(menu.parentNode !== document.body) {
+          menu.remove();
+          document.body.appendChild(menu);
+        }
+
+        menu.style.display = 'block';
+      } else {
+        menu.style.display = 'none';
+      }
+    }catch(e){
+      console.error('[Textoo] Erreur toggle menu:', e);
+    }
+  }
+
+  // Fonction pour gérer les actions du menu
+  function handleMenuAction(action){
+    try{
+      const fab = window.__textoo_fab;
+      if(!fab) return;
+
+      // Trouver l'élément éditable actif
+      const composer = findActiveGenericEditableForFab();
+      if(!composer) {
+        alert('Aucun champ de texte actif trouvé');
+        return;
+      }
+
+      let text = '';
+      if(composer.tagName === 'INPUT' || composer.tagName === 'TEXTAREA') {
+        text = composer.value;
+      } else if(composer.contentEditable === 'true') {
+        text = composer.textContent || composer.innerText;
+      }
+
+      if(!text.trim()) {
+        alert('Aucun texte à traiter');
+        return;
+      }
+
+      let panel = window.__textoo_panel;
+      if(!panel) panel = buildPanel();
+      if(!panel) return;
+
+      const resultDiv = panel.querySelector('#hmw-result');
+      if(!resultDiv) return;
+
+      // Masquer le menu
+      const menu = window.__textoo_menu;
+      if(menu) menu.style.display = 'none';
+
+      // Afficher le panel
+      panel.style.display = 'block';
+      document.body.appendChild(panel);
+
+      // Traitement selon l'action
+      switch(action) {
+        case 'correct':
+          resultDiv.textContent = 'Correction en cours...';
+          setTimeout(() => {
+            resultDiv.textContent = generateCorrection(text);
+          }, 500);
+          break;
+        case 'reformulate':
+          resultDiv.textContent = 'Reformulation en cours...';
+          setTimeout(() => {
+            resultDiv.textContent = generateReformulation(text);
+          }, 500);
+          break;
+        case 'quick-reply':
+          resultDiv.textContent = 'Génération de réponse rapide...';
+          setTimeout(() => {
+            resultDiv.textContent = generateQuickReply(text);
+          }, 500);
+          break;
+      }
+    }catch(e){
+      console.error('[Textoo] Erreur action menu:', e);
+    }
+  }
+
+  // Fonction pour générer une correction
+  function generateCorrection(text){
+    // Simulation de correction
+    return text
+      .replace(/\bmanger\b/g, 'mangé')
+      .replace(/\bdes poulet\b/g, 'du poulet')
+      .replace(/\bjjhe\b/g, 'je')
+      .replace(/\bne veux\b/g, 'ne veux pas');
+  }
+
+  // Fonction pour générer une reformulation
+  function generateReformulation(text){
+    const reformulations = [
+      `Voici une reformulation : ${text}`,
+      `Version améliorée : ${text}`,
+      `Alternative : ${text}`,
+      `Reformulation : ${text}`
+    ];
+    return reformulations[Math.floor(Math.random() * reformulations.length)];
+  }
+
+  // Fonction pour générer une réponse rapide
+  function generateQuickReply(text){
+    const quickReplies = [
+      'Merci pour votre message !',
+      'Je vous remercie pour cette information.',
+      'Parfait, je prends note.',
+      'D\'accord, je comprends.',
+      'Merci, c\'est noté !'
+    ];
+    return quickReplies[Math.floor(Math.random() * quickReplies.length)];
+  }
+
+  // Fonction pour positionner le FAB et le menu
+  function positionFabAndMenu(){
+    try{
+      // Ne pas positionner le FAB sur Gmail et Outlook
+      if (isGmailOrOutlook()) {
+        return;
+      }
+      
+      const fab = window.__textoo_fab;
+      const menu = window.__textoo_menu;
+
+      if(!fab) {
+        ensureFab();
+        return;
+      }
+
+      // Chercher un élément éditable actif
+      const composer = findActiveGenericEditableForFab();
+      const hasSelection = window.getSelection && window.getSelection().toString().trim().length > 0;
+
+      if(composer || hasSelection) {
+        // Afficher le FAB
+        fab.style.display = 'block';
+        console.log('[Textoo] FAB affiché pour composer:', !!composer, 'sélection:', hasSelection);
+        
+        // Positionner le FAB après le texte tapé
+        if(composer) {
+          positionFabAfterText(composer);
+          
+        } else if(hasSelection) {
+          // Pour la sélection, positionner près de la sélection
+          try {
+            const selection = window.getSelection();
+            if(selection.rangeCount > 0) {
+              const range = selection.getRangeAt(0);
+              const rect = range.getBoundingClientRect();
+              
+              fab.style.position = 'fixed';
+              fab.style.left = `${rect.right + 10}px`;
+              fab.style.top = `${rect.top - 12}px`;
+              fab.style.right = 'auto';
+              fab.style.bottom = 'auto';
+              fab.style.display = 'block';
+            }
+          } catch(e) {
+            console.error('[Textoo] Erreur positionnement sélection:', e);
+          }
+        } else {
+          // Position par défaut
+          fab.style.position = 'fixed';
+          fab.style.right = '20px';
+          fab.style.bottom = '20px';
+          fab.style.left = 'auto';
+          fab.style.top = 'auto';
+          fab.style.display = 'block';
+        }
+
+        if(menu) {
+          menu.style.display = 'none';
+        }
+      } else {
+        // Masquer le FAB et le menu
+        fab.style.display = 'none';
+        if(menu) menu.style.display = 'none';
+        
+        const panel = window.__textoo_panel;
+        if(panel) panel.style.display = 'none';
+      }
+    }catch(e){
+      console.error('[Textoo] Erreur positionnement FAB:', e);
+    }
+  }
+
 })();

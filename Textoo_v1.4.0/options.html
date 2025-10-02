@@ -23,6 +23,33 @@
     <div>
       <button id="save">Enregistrer</button><span id="msg"></span>
     </div>
+    <hr style="margin:24px 0; border:none; border-top:1px solid #eee" />
+    <h2>Préférences de typographie</h2>
+    <label style="display:flex; align-items:center; gap:10px; font-weight:500;">
+      <input id="disableThinSpace" type="checkbox" style="width:auto;" />
+      Désactiver la suggestion d’espace fine insécable avant <code>?!;:</code>
+    </label>
+    <hr style="margin:24px 0; border:none; border-top:1px solid #eee" />
+    <h2>Langue & Performance</h2>
+    <label for="forceLang">Forcer la langue (sinon auto)</label>
+    <select id="forceLang" style="width:240px; padding:8px 10px; border:1px solid #c8c4f3; border-radius:8px;">
+      <option value="auto">Auto</option>
+      <option value="fr">Français</option>
+      <option value="en">English</option>
+      <option value="es">Español</option>
+    </select>
+    <label style="display:flex; align-items:center; gap:10px; font-weight:500;">
+      <input id="multiBySentence" type="checkbox" style="width:auto;" checked />
+      Activer le routage multi‑langues par phrase
+    </label>
+    <label for="maxMarkers">Nombre maximum de marqueurs visibles (perf)</label>
+    <input id="maxMarkers" type="number" min="200" max="5000" step="50" placeholder="800" />
+    <label for="longSentence">Seuil phrase longue (mots)</label>
+    <input id="longSentence" type="number" min="20" max="60" step="1" placeholder="33" />
+    <label style="display:flex; align-items:center; gap:10px; font-weight:500;">
+      <input id="debugLogs" type="checkbox" style="width:auto;" />
+      Activer les logs de débogage
+    </label>
     <script src="options.js"></script>
   </body>
 </html>

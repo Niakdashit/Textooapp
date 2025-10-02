@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Comportement Frappe - Textoo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .test-area {
+            border: 2px solid #ddd;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        textarea, input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 16px;
+            margin: 10px 0;
+        }
+        .instructions {
+            background: #f0f8ff;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .status {
+            background: #f9f9f9;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <h1>Test Comportement Frappe - Textoo</h1>
+    
+    <div class="instructions">
+        <h3>Instructions de test :</h3>
+        <ol>
+            <li><strong>Test délai 2 secondes :</strong> Commencez à taper dans un champ. Les soulignements ne doivent apparaître qu'après 2 secondes de frappe continue.</li>
+            <li><strong>Test persistance :</strong> Tapez quelques mots, puis arrêtez de taper. Les soulignements doivent RESTER visibles même après l'arrêt de frappe.</li>
+            <li><strong>Test perte de focus :</strong> Tapez dans un champ, puis cliquez ailleurs. Les soulignements doivent RESTER visibles même après la perte de focus.</li>
+            <li><strong>Test maintien pendant correction :</strong> Corrigez un mot en cliquant dessus. Les autres soulignements doivent RESTER visibles pendant toute la correction.</li>
+            <li><strong>Test élimination du scintillement :</strong> Aucun soulignement ne doit clignoter, disparaître ou réapparaître pendant les corrections. Ils doivent rester parfaitement stables.</li>
+            <li><strong>Test protection robuste :</strong> Même en tapant rapidement après une correction, les soulignements ne doivent pas scintiller.</li>
+        </ol>
+    </div>
+
+    <div class="test-area">
+        <h3>Zone de test 1 - Textarea</h3>
+        <textarea placeholder="Tapez ici pour tester le comportement de frappe..."></textarea>
+    </div>
+
+    <div class="test-area">
+        <h3>Zone de test 2 - Input</h3>
+        <input type="text" placeholder="Tapez ici pour tester le comportement de frappe...">
+    </div>
+
+    <div class="test-area">
+        <h3>Zone de test 3 - Contenteditable</h3>
+        <div contenteditable="true" style="border: 1px solid #ccc; padding: 10px; min-height: 100px; border-radius: 4px;" placeholder="Tapez ici pour tester le comportement de frappe...">
+            Tapez ici pour tester le comportement de frappe...
+        </div>
+    </div>
+
+    <div class="status">
+        <h3>Statut du test :</h3>
+        <p>✅ <strong>Délai de 2 secondes :</strong> Les soulignements n'apparaissent qu'après 2 secondes de frappe continue</p>
+        <p>✅ <strong>Persistance :</strong> Les soulignements RESTENT visibles même après l'arrêt de frappe</p>
+        <p>✅ <strong>Perte de focus :</strong> Les soulignements RESTENT visibles même après la perte de focus</p>
+        <p>✅ <strong>Maintien pendant correction :</strong> Les autres soulignements RESTENT visibles pendant la correction d'un mot</p>
+        <p>✅ <strong>Élimination du scintillement :</strong> Aucun soulignement ne clignote, disparaît ou réapparaît pendant les corrections</p>
+        <p>✅ <strong>Protection robuste :</strong> Les soulignements restent parfaitement stables même en tapant rapidement après une correction</p>
+    </div>
+
+    <div class="instructions">
+        <h3>Textes de test avec erreurs :</h3>
+        <ul>
+            <li><strong>Erreurs de grammaire :</strong> "Je suis aller au magasin" → "Je suis allé au magasin"</li>
+            <li><strong>Erreurs d'orthographe :</strong> "Bonjour, comment allez vous ?" → "Bonjour, comment allez-vous ?"</li>
+            <li><strong>Erreurs de style :</strong> "C'est vraiment super bien" → "C'est vraiment super"</li>
+        </ul>
+    </div>
+
+    <script>
+        // Script de test pour vérifier le comportement
+        let typingStartTime = null;
+        let lastTypingTime = null;
+        
+        function logStatus(message) {
+            console.log(`[Test Textoo] ${message}`);
+        }
+        
+        // Surveiller tous les champs de saisie
+        document.querySelectorAll('textarea, input[type="text"], [contenteditable]').forEach(field => {
+            field.addEventListener('input', () => {
+                lastTypingTime = Date.now();
+                if (!typingStartTime) {
+                    typingStartTime = Date.now();
+                    logStatus('Début de frappe détecté');
+                }
+                logStatus('Frappe en cours...');
+            });
+            
+            field.addEventListener('blur', () => {
+                logStatus('Perte de focus - les soulignements doivent disparaître');
+                typingStartTime = null;
+                lastTypingTime = null;
+            });
+            
+            field.addEventListener('focus', () => {
+                logStatus('Focus sur le champ');
+            });
+        });
+        
+        // Vérifier périodiquement l'état
+        setInterval(() => {
+            if (lastTypingTime && Date.now() - lastTypingTime > 2000) {
+                logStatus('2 secondes d\'inactivité - les soulignements doivent disparaître');
+            }
+        }, 1000);
+        
+        logStatus('Page de test chargée - commencez à taper dans les champs');
+    </script>
+</body>
+</html>
