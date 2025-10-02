@@ -3335,8 +3335,8 @@ border:0;line-height:22px;text-align:center;font-size: 11px;cursor:pointer;
       }
       
       // Positionner le compteur juste au-dessus de la dernière lettre
-      x -= 2; // Décalage négatif - légèrement superposé au texte
-      y -= 10; // Positionner au-dessus du texte (au lieu de centrer verticalement)
+      x += 0; // Pas de décalage horizontal - aligné avec la fin du texte
+      y -= 5; // Positionner légèrement au-dessus du texte
       
       // S'assurer que le compteur reste visible
       const counterSize = 14;
